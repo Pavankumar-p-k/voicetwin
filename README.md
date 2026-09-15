@@ -74,6 +74,8 @@ Every run records four timestamps:
 | **T2** | first agent audio chunk (`reply.audio`) — the "feels instant" number |
 | **T3** | agent audio end (`reply.done`) |
 
+Every turn prints `⏱ first audio in N ms (T2−T0)` and `⏱ reply heard in N ms (T3−T0) — gate GREEN/YELLOW/RED` live in the transcript, so latency is visible even outside the harness.
+
 **Primary metric: T3 − T0** (median of ≥5 clean runs; silence and interrupted runs excluded).
 
 ## 🚦 Decision gate

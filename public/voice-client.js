@@ -128,8 +128,8 @@ function inlineSession() {
   // Day 1 = voice reality check: short replies, plain voice, no tools.
   return {
     system_prompt:
-      'You are a friendly assistant on a voice call. Keep every reply to one or two short sentences. ' +
-      'Answer what was asked, lead with the answer, and skip the preamble. If you don\u2019t know something, say so. No exclamation marks.',
+      'You are a friendly assistant on a voice call. Keep every reply to ONE short sentence — never two. ' +
+      'Answer what was asked first; skip preamble and disclaimers. If you don\u2019t know something, say so briefly. No exclamation marks.',
     greeting: 'Hey, what can I do for you?',
     output: { voice: CONFIG.AAI.VOICE },
   };
@@ -180,6 +180,7 @@ function onMessage(msg) {
       if (turn.T0 != null && turn.T2 == null) {
         turn.T2 = performance.now();
         EVT.push('T2', { t: turn.T2 });
+        logLine(`⏱ first audio in ${Math.round(turn.T2 - turn.T0)} ms (T2−T0)`, 'sys');
       }
       playChunk(msg.data);
       break;
@@ -201,6 +202,9 @@ function onMessage(msg) {
       if (turn.T0 != null && turn.T3 == null && !interrupted) {
         turn.T3 = performance.now();
         EVT.push('T3', { t: turn.T3 });
+        const dt = Math.round(turn.T3 - turn.T0);
+        const v = dt <= CONFIG.GATE.GREEN_MAX_MS ? 'GREEN' : dt <= CONFIG.GATE.YELLOW_MAX_MS ? 'YELLOW' : 'RED';
+        logLine(`⏱ reply heard in ${dt} ms (T3−T0) — gate ${v}`, 'sys');
       }
       break;
     }
