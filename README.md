@@ -1,0 +1,113 @@
+# VoiceTwin — Adaptive Voice Interviewer
+
+> "We built an AI interviewer that actually listens to your answer and fights back."
+
+**Day 1 complete: Voice Reality + Latency.** An interviewer that doesn't just ask questions —
+it listens, challenges weak answers, interrupts naturally, and adapts in real time.
+Built on the [AssemblyAI Voice Agent API](https://www.assemblyai.com/docs/voice-agents/voice-agent-api)
+(one WebSocket: STT + turn detection + interruption + LLM + TTS).
+
+---
+
+## Status: Day 1 of 7
+
+| Day | Mission | Status |
+|-----|---------|--------|
+| **1** | **Voice + latency + fallback** | ✅ **this repo** |
+| 2 | Interview engine | ⬜ |
+| 3 | Adaptive follow-ups + pressure | ⬜ |
+| 4 | Evidence-based rubric scoring | ⬜ (rubrics already drafted — see `data/questions.json`) |
+| 5 | Coaching loop (before → after) | ⬜ |
+| 6 | Demo polish | ⬜ |
+| 7 | Stress testing + dry run | ⬜ |
+
+## What's inside (Day 1)
+
+```
+MIC → browser AudioWorklet (24 kHz PCM16) → wss://agents.assemblyai.com/v1/ws
+                                           ← agent audio → SPEAKER
+              ↑ temporary token                     ↑
+              └── our server mints GET /v1/token    └── T0..T3 timestamps → latency store
+```
+
+- **`server/`** — temp-token minting (API key never touches the browser), latency ingest,
+  usage counter. Zero frameworks; `ws` not even required server-side (browser talks direct).
+- **`public/voice-client.js`** — the voice loop: `session.update` → `session.ready` →
+  stream audio → barge-in flush on `reply.done: interrupted` → `session.end` before close
+  (never pay the 30-second grace window).
+- **`public/harness.html`** — the 8-scenario Day 1 protocol with **Space = record run**,
+  per-test medians, and the decision gate verdict.
+- **`public/safe.html`** — Demo Safe Mode: identical UI, recorded conversation, 0 credits.
+- **`data/questions.json`** — Day 1 evening prep: 8 questions + 5-point evidence rubrics (Day 4 fuel).
+
+## Run it
+
+```bash
+cd voicetwin
+npm install            # installs ws (server keeps node:http anyway)
+cp .env.example .env   # paste your ASSEMBLYAI_API_KEY (free tier, no card)
+npm start              # http://localhost:3000
+```
+
+Pages:
+
+| URL | Purpose |
+|-----|---------|
+| `/` | Voice console — start a session, talk |
+| `/harness.html` | Latency protocol runner + decision gate |
+| `/safe.html` | Demo Safe Mode (fallback replay, `Esc` from anywhere) |
+| `/api/health`, `/api/usage`, `/api/latency`, `/api/latency/summary` | introspection |
+
+## The Day 1 test protocol
+
+With a session live on `/harness.html`, run each scenario out loud, press **Space** after
+each turn. The label auto-advances through:
+
+`normal ×5 · short · long · silence · interruption · vocab · noise · wifi`
+
+Every run records four timestamps:
+
+| Stamp | Meaning |
+|-------|---------|
+| **T0** | user turn start |
+| **T1** | final user transcript received (`transcript.user`) |
+| **T2** | first agent audio chunk (`reply.audio`) — the "feels instant" number |
+| **T3** | agent audio end (`reply.done`) |
+
+**Primary metric: T3 − T0** (median of ≥5 clean runs; silence and interrupted runs excluded).
+
+## 🚦 Decision gate
+
+| Verdict | Median T3−T0 | Action |
+|---------|--------------|--------|
+| 🟢 GREEN | ≤ 1500 ms | Continue full adaptive architecture |
+| 🟡 YELLOW | ≤ 2500 ms | Optimize prompts / model / output length |
+| 🔴 RED | > 2500 ms | Do not continue blindly — change the architecture |
+
+## Credit discipline (free tier, no card)
+
+- Sessions hard-capped (`MAX_SESSION_SECONDS=180`, client auto-ends at the cap)
+- Single-use tokens, short TTL
+- **`session.end` sent before every close** — including `pagehide` — so the 30-second
+  billable resume window is never paid
+- Test batches of 5, short sessions, no idle streaming
+- `/api/usage` shows tokens minted + sessions started at a glance
+
+## Demo Safe Mode
+
+If live fails during the demo: press **Esc** (manual trigger — the most reliable, rehearsed
+option). The recorded session replays in the identical UI, paced like the real thing,
+**0 credits**. The judge never knows unless we tell them.
+
+## Verification
+
+```bash
+npm run check   # parse-checks every JS file (no network, no side effects)
+```
+
+## The pitch line
+
+> "We're not asking an LLM whether the answer sounds impressive. We're checking whether
+> the answer contains the evidence required by the question."
+
+*(that's Day 4 — but the rubrics exist already, written tonight, for free)*

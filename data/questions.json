@@ -1,0 +1,102 @@
+{
+  "role": "Software Engineer",
+  "note": "Day 1 evening prep — written now, zero API cost, wired into scoring on Day 4. Each question has exactly 5 evidence points; scoring counts which points the answer contains, not how impressive it sounds.",
+  "questions": [
+    {
+      "id": "Q1",
+      "question": "Tell me about a difficult technical project.",
+      "follow_up_probe": "What was YOUR specific contribution?",
+      "rubric": [
+        "Names the project with real context (where/when/with whom)",
+        "States what made it technically difficult",
+        "Identifies their own specific contribution",
+        "Explains a concrete technical decision and its tradeoff",
+        "Gives a measurable outcome (metric, users, time saved)"
+      ]
+    },
+    {
+      "id": "Q2",
+      "question": "Tell me about a performance problem you solved.",
+      "follow_up_probe": "How did you measure it before and after?",
+      "rubric": [
+        "Identified the bottleneck",
+        "Explained measurement / profiling approach",
+        "Identified root cause",
+        "Explained the technical solution",
+        "Provided a measurable result"
+      ]
+    },
+    {
+      "id": "Q3",
+      "question": "Describe a technical disagreement.",
+      "follow_up_probe": "What data settled it?",
+      "rubric": [
+        "Names the disagreement and stakes",
+        "Represents the other side fairly",
+        "Explains their own position with reasons",
+        "Describes how it was resolved (data, owner, experiment)",
+        "States the outcome and a lesson"
+      ]
+    },
+    {
+      "id": "Q4",
+      "question": "Explain a system you designed.",
+      "follow_up_probe": "What would break first at 10x load?",
+      "rubric": [
+        "States requirements and constraints",
+        "Describes components and responsibilities",
+        "Justifies a key design choice",
+        "Addresses failure modes / data consistency",
+        "Names a scaling limitation honestly"
+      ]
+    },
+    {
+      "id": "Q5",
+      "question": "Tell me about a production failure.",
+      "follow_up_probe": "What alerting or process changed after?",
+      "rubric": [
+        "Describes the failure and user impact",
+        "Explains detection (how it was found)",
+        "Explains mitigation / rollback",
+        "Identifies root cause",
+        "States the prevention change made after"
+      ]
+    },
+    {
+      "id": "Q6",
+      "question": "How would you scale X? (pick the candidate's own project)",
+      "follow_up_probe": "Which component fails first, and why?",
+      "rubric": [
+        "Establishes current load baseline",
+        "Identifies the first bottleneck",
+        "Proposes a concrete scaling technique",
+        "Mentions tradeoff or cost of the approach",
+        "Defines how they'd verify the improvement"
+      ]
+    },
+    {
+      "id": "Q7",
+      "question": "Tell me about a mistake you made.",
+      "follow_up_probe": "What did you change in your own workflow?",
+      "rubric": [
+        "Owns a real mistake (not a humble-brag)",
+        "Explains the impact honestly",
+        "Takes responsibility without deflection",
+        "Describes the fix",
+        "States a durable workflow change"
+      ]
+    },
+    {
+      "id": "Q8",
+      "question": "Why should we hire you?",
+      "follow_up_probe": "Give one piece of evidence for that claim.",
+      "rubric": [
+        "Makes a specific claim (not generic praise)",
+        "Backs it with concrete evidence",
+        "Connects to the role's requirements",
+        "Shows knowledge of the company/problem",
+        "Closes with a confident, non-hedged statement"
+      ]
+    }
+  ]
+}
