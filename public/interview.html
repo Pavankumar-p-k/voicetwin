@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceTwin — Voice Interviewer</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">VOICE<span>TWIN</span></div>
+    <div class="subtitle">Day 2 · interview engine</div>
+    <nav class="nav">
+      <a href="/">Console</a>
+      <a href="/harness.html">Latency harness</a>
+      <a href="/interview.html" class="active">Interview</a>
+      <a href="/safe.html">Safe mode</a>
+    </nav>
+  </header>
+
+  <main class="grid">
+    <section class="panel controls">
+      <h2>Voice Interviewer</h2>
+
+      <div class="cfgrow">
+        <label>Role
+          <select id="roleSelect">
+            <option>Software Engineer</option>
+          </select>
+        </label>
+        <label>Mode
+          <select id="modeSelect">
+            <option value="normal">Normal</option>
+            <option value="pressure">Pressure</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="statusrow big">
+        <span class="dot agent" id="stateDot"></span>
+        <span id="stateText" class="statetext">IDLE</span>
+      </div>
+
+      <div class="qbox">
+        <div class="qlabel">Current question</div>
+        <div id="questionText" class="qtext">—</div>
+        <div id="qMeta" class="qmeta"></div>
+      </div>
+
+      <div class="pressure">
+        <span class="plabel">pressure</span>
+        <span class="pblocks" id="pressureBlocks">░░░░</span>
+        <span id="pLevel" class="pnum">1</span>
+      </div>
+
+      <div class="buttons">
+        <button id="startBtn" class="primary">Start interview</button>
+        <button id="endBtn" class="danger" disabled>End interview</button>
+      </div>
+
+      <div class="hint">
+        The interviewer asks 8 questions and adapts to how you answer. Vague answers raise
+        the pressure; specific answers calm it down. Interruptions are welcome — that's the point.
+        <kbd>Esc</kbd> jumps to Demo Safe Mode.
+      </div>
+    </section>
+
+    <section class="panel transcript">
+      <h2>Transcript</h2>
+      <div id="log" class="log"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span id="footNote"></span>
+    <span>tools: next_question · check_answer · end_interview</span>
+  </footer>
+
+  <script type="module" src="/interview-app.js"></script>
+</body>
+</html>

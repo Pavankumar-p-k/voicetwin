@@ -55,6 +55,21 @@ export const audio = {
   },
 };
 
+// ---- interview session (Day 2) ----
+// interviewId keys the server-side state machine; toolsPending buffers
+// tool.results until reply.done (per AAI: send results on reply.done).
+export const interview = {
+  id: null,
+  active: false,
+  question: null,
+  snapshot: null,
+  tools: [],
+  systemPrompt: '',
+  waitingForAnswer: false,
+  toolsPending: [],
+  lastUserText: '',
+};
+
 // ---- UI logger ----
 export function logLine(msg, cls = '') {
   const el = document.getElementById('log');
@@ -102,7 +117,9 @@ export async function startVoice() {
     audio.ws.send(JSON.stringify({ type: 'session.update', session: inlineSession() }));
   });
 
-  audio.ws.addEventListener('message', (ev) => onMessage(JSON.parse(ev.data)));
+  audio.ws.addEventListener('message', (ev) => {
+    onMessage(JSON.parse(ev.data)).catch((err) => logLine(`handler: ${err.message}`, 'err'));
+  });
   audio.ws.addEventListener('close', (ev) => {
     EVT.push('ws.close', { code: ev.code });
     logLine(`connection closed (${ev.code})`, 'dim');
@@ -125,18 +142,41 @@ export async function startVoice() {
 
 function inlineSession() {
   // Inline configuration (mutually exclusive with agent_id).
-  // Day 1 = voice reality check: short replies, plain voice, no tools.
+  // Interview mode uses the server-built persona prompt + tools (Day 2).
+  if (interview.active && interview.systemPrompt) {
+    return {
+      system_prompt: interview.systemPrompt,
+      greeting: interview.question ? `Let's begin. ${interview.question.text}` : 'Let’s begin.',
+      output: { voice: CONFIG.AAI.VOICE },
+      input: {
+        turn_detection: { vad_threshold: 0.5, min_silence: 2200, max_silence: 6000, interrupt_response: true },
+      },
+      tools: interview.tools,
+    };
+  }
+  // Plain Day 1 mode: short replies, baseline turn detection.
   return {
     system_prompt:
       'You are a friendly assistant on a voice call. Keep every reply to ONE short sentence — never two. ' +
-      'Answer what was asked first; skip preamble and disclaimers. If you don\u2019t know something, say so briefly. No exclamation marks.',
+      'Answer what was asked first; skip preamble and disclaimers. If you don’t know something, say so briefly. No exclamation marks.',
     greeting: 'Hey, what can I do for you?',
     output: { voice: CONFIG.AAI.VOICE },
   };
 }
 
+// Mid-session turn-detection retune (docs pattern): loosen while waiting for
+// an open-ended answer so thinkers aren't cut off; tighten afterwards.
+export async function setTurnDetection(td) {
+  if (audio.ws && audio.ws.readyState === WebSocket.OPEN) {
+    audio.ws.send(JSON.stringify({ type: 'session.update', session: { input: { turn_detection: td } } }));
+    EVT.push('turn_detection', { td });
+  }
+}
+export const TD_BASELINE = { vad_threshold: 0.5, min_silence: 1200, max_silence: 3000, interrupt_response: true };
+export const TD_LOOSE = { vad_threshold: 0.45, min_silence: 2200, max_silence: 6000, interrupt_response: true };
+
 // ---- message handling + timestamps ----
-function onMessage(msg) {
+async function onMessage(msg) {
   switch (msg.type) {
     case 'session.ready':
       audio.ready = true;
@@ -169,12 +209,32 @@ function onMessage(msg) {
       EVT.push('user.final', { text: msg.text });
       if (turn.T0 != null && turn.T1 == null) { turn.T1 = performance.now(); }
       turn.finalTranscript = msg.text;
+      turn.agentText = '';
+      interview.lastUserText = msg.text;
       logLine(`You: ${msg.text}`);
+      // Answer received: retune to baseline (tighten again).
+      if (interview.waitingForAnswer) {
+        interview.waitingForAnswer = false;
+        setTurnDetection(TD_BASELINE);
+      }
       break;
 
     case 'reply.started':
       EVT.push('reply.started', { replyId: msg.reply_id });
       break;
+
+    case 'tool.call': {
+      EVT.push('tool.call', { name: msg.name, callId: msg.call_id });
+      try {
+        const result = await handleToolCall(msg.name, msg.arguments || {});
+        interview.toolsPending.push({ call_id: msg.call_id, result });
+        logLine(`tool: ${msg.name} ok`, 'sys');
+      } catch (err) {
+        interview.toolsPending.push({ call_id: msg.call_id, result: JSON.stringify({ error: err.message }) });
+        logLine(`tool: ${msg.name} failed: ${err.message}`, 'err');
+      }
+      break;
+    }
 
     case 'reply.audio': {
       if (turn.T0 != null && turn.T2 == null) {
@@ -198,6 +258,14 @@ function onMessage(msg) {
       if (interrupted) {
         harnessState.interrupted = true;
         audio.flushPlayback(); // barge-in: drop stale scheduled audio
+        interview.toolsPending.length = 0; // stale tool results are meaningless after barge-in
+      } else {
+        // AAI pattern: send accumulated tool.result events on reply.done.
+        for (const t of interview.toolsPending) {
+          audio.ws.send(JSON.stringify({ type: 'tool.result', call_id: t.call_id, result: t.result }));
+          EVT.push('tool.result.sent', { callId: t.call_id });
+        }
+        interview.toolsPending.length = 0;
       }
       if (turn.T0 != null && turn.T3 == null && !interrupted) {
         turn.T3 = performance.now();
@@ -245,6 +313,86 @@ function playChunk(b64) {
   audio.playbackTime += buffer.duration;
   audio.playbackQueue.push({ src, startAt: audio.playbackTime });
   audio.playbackQueue = audio.playbackQueue.filter((q) => q.startAt > now - 1);
+}
+
+// ---- Day 2: interview tool dispatch (client-side function tools) ----
+async function handleToolCall(name, args) {
+  if (name === 'check_answer') {
+    const res = await fetch('/api/interview/answer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interviewId: interview.id, answerText: args.answer_text || interview.lastUserText || '' }),
+    });
+    if (!res.ok) throw new Error(`answer api ${res.status}`);
+    const data = await res.json();
+    interview.snapshot = data.snapshot;
+    EVT.push('interview.pressure', { level: data.pressure.level, direction: data.pressure.direction });
+    return JSON.stringify({ pressure_level: data.pressure.level, next_utterance_guidance: data.guidance });
+  }
+
+  if (name === 'next_question') {
+    const res = await fetch('/api/interview/next', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interviewId: interview.id }),
+    });
+    if (!res.ok) throw new Error(`next api ${res.status}`);
+    const data = await res.json();
+    if (data.finished) {
+      EVT.push('interview.finished', {});
+      return JSON.stringify({ finished: true, closing_guidance: 'Thank the candidate and close the interview in one sentence. Do not ask anything else.' });
+    }
+    interview.question = data.question;
+    interview.systemPrompt = data.systemPrompt;
+    interview.snapshot = data.snapshot;
+    interview.waitingForAnswer = true;
+    setTurnDetection(TD_LOOSE); // open-ended question: give the candidate room
+    EVT.push('interview.question', { id: data.question.id });
+    return JSON.stringify({ finished: false, next_question: data.question.text, utterance_guidance: `Ask exactly: "${data.question.text}"` });
+  }
+
+  if (name === 'end_interview') {
+    interview.active = false;
+    fetch('/api/interview/end', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interviewId: interview.id }),
+    }).catch(() => {});
+    EVT.push('interview.ended.by_agent', {});
+    return JSON.stringify({ ended: true, closing_guidance: 'Close politely in one short sentence.' });
+  }
+
+  throw new Error(`unknown tool: ${name}`);
+}
+
+// Prepare an interview session BEFORE startVoice() so inlineSession() picks it up.
+export async function setupInterview({ role = 'Software Engineer', mode = 'normal', interviewId } = {}) {
+  const res = await fetch('/api/interview/start', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role, mode, interviewId }),
+  });
+  if (!res.ok) throw new Error(`interview start failed: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  interview.id = data.interviewId;
+  interview.question = data.question;
+  interview.snapshot = data.snapshot;
+  interview.systemPrompt = data.systemPrompt;
+  interview.tools = data.tools;
+  interview.active = true;
+  interview.waitingForAnswer = true;
+  interview.toolsPending = [];
+  EVT.push('interview.setup', { interviewId: interview.id, question: data.question.id });
+  return data;
+}
+
+export function teardownInterview() {
+  if (interview.active && interview.id) {
+    fetch('/api/interview/end', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interviewId: interview.id }),
+    }).catch(() => {});
+  }
+  interview.active = false;
+  interview.id = null;
+  interview.toolsPending = [];
+  interview.waitingForAnswer = false;
 }
 
 // ---- teardown (billing-critical: session.end BEFORE close) ----
