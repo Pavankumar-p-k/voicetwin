@@ -1,11 +1,11 @@
 // VoiceTwin — Day 1 configuration. Single source of truth.
-// Protocol verified against AssemblyAI Voice Agent docs (Sep 2026):
-//   wss://agents.assemblyai.com/v1/ws  (Bearer on server, ?token= in browser)
-//   Audio: PCM16 mono, 24 kHz, base64 inside JSON frames.
-//   Teardown: send session.end BEFORE closing, else 30s billable grace window.
+// Shared by the Node server AND the browser (served at /config.js), so it must
+// be environment-isomorphic: process.env exists only in Node. No secrets here.
+const hasProcess = typeof process !== 'undefined' && typeof process.env !== 'undefined';
+const env = hasProcess ? process.env : {}; // browser: defaults only; server injects real limits via /api/health
 
 export const CONFIG = {
-  PORT: process.env.PORT ? Number(process.env.PORT) : 3000,
+  PORT: env.PORT ? Number(env.PORT) : 3000,
 
   AAI: {
     WS_URL: 'wss://agents.assemblyai.com/v1/ws',
@@ -16,8 +16,8 @@ export const CONFIG = {
 
   // Credit discipline: free tier, no card. Every second of session is billed.
   LIMITS: {
-    MAX_SESSION_SECONDS: clampInt(process.env.MAX_SESSION_SECONDS, 60, 10800, 180),
-    TOKEN_EXPIRES_SECONDS: clampInt(process.env.TOKEN_EXPIRES_SECONDS, 1, 600, 300),
+    MAX_SESSION_SECONDS: clampInt(env.MAX_SESSION_SECONDS, 60, 10800, 180),
+    TOKEN_EXPIRES_SECONDS: clampInt(env.TOKEN_EXPIRES_SECONDS, 1, 600, 300),
     // Hard client-side cap: force end at this wall-clock time.
     CLIENT_MAX_SECONDS: 180,
   },

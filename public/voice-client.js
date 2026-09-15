@@ -4,7 +4,7 @@
 // protocol event lands in EVT (raw log) and hooks call timestamp() so the
 // harness page can measure T0..T3 without touching this file.
 
-import { CONFIG } from './config.js';
+import { CONFIG } from '/config.js'; // shared root config, served by the server
 
 // ---- shared instrumentation bus (Page 3 reads this) ----
 export const EVT = {
@@ -151,6 +151,9 @@ function onMessage(msg) {
 
     case 'input.speech.started':
       EVT.push('speech.started');
+      // T0 = user turn start. Auto-arm on the first utterance and re-arm
+      // after a completed turn, so a fresh Space-press always has a turn.
+      if (turn.T0 == null || turn.T3 != null) turn.markTurnStart();
       break;
 
     case 'input.speech.stopped':

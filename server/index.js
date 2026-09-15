@@ -165,8 +165,22 @@ const server = http.createServer(async (req, res) => {
   // Static
   let file = url.pathname === '/' ? '/index.html' : url.pathname;
   const safePath = path.normalize(file).replace(/^(\.\.[/\\])+/, '');
-  const abs = path.join(PUBLIC_DIR, safePath);
-  if (!abs.startsWith(PUBLIC_DIR) || !existsSync(abs) || !abs.includes('.')) {
+
+  // /config.js is shared between the server and the browser (no secrets in it).
+  // The root file is served explicitly because PUBLIC_DIR is the docroot.
+  // NOTE: path.normalize flips slashes to backslashes on win32, so compare
+  // against a forward-slash form of the safe path.
+  const normPath = safePath.split('\\').join('/');
+  const isSharedConfig = normPath === '/config.js';
+  const abs = isSharedConfig
+    ? path.join(ROOT, 'config.js')
+    : path.join(PUBLIC_DIR, safePath);
+
+  if (!isSharedConfig && (!abs.startsWith(PUBLIC_DIR) || !existsSync(abs) || !abs.includes('.'))) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    return res.end('Not found');
+  }
+  if (!existsSync(abs)) {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     return res.end('Not found');
   }
