@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { analyzeAnswer, buildFollowUp, pressureDelta } from './answer-analysis.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const QUESTIONS_PATH = path.join(ROOT, 'data', 'questions.json');
@@ -81,9 +82,8 @@ export class Interview {
       : text;
   }
 
-  // Day 2 pressure heuristic — deliberately simple, no LLM call:
-  // short answers (few content words) push pressure up; detailed answers let it relax.
-  // Returns { level, direction } for logging.
+  // Day 2 pressure heuristic — REPLACED on Day 3 by analyzeAnswer(); kept as
+  // a fallback for degenerate input (empty answer).
   evaluatePressure(answerText) {
     const words = (answerText || '').trim().split(/\s+/).filter(Boolean);
     const contentWords = words.filter((w) => w.length > 3).length;
@@ -93,6 +93,42 @@ export class Interview {
     const before = this.state.pressure_level;
     this.state.pressure_level = Math.min(4, Math.max(1, before + direction));
     return { level: this.state.pressure_level, direction, before, contentWords };
+  }
+
+  // Day 3: full adaptive evaluation. Runs analysis, adjusts pressure,
+  // appends categorized weaknesses, and returns the exact follow-up to speak
+  // (or null when the answer is strong / follow-up budget is spent).
+  evaluateAnswer(answerText) {
+    const analysis = analyzeAnswer(answerText);
+    const before = this.state.pressure_level;
+
+    const delta = analysis.wordCount < 1 ? +1 : pressureDelta(analysis);
+    this.state.pressure_level = Math.min(4, Math.max(1, before + delta));
+
+    for (const w of analysis.weaknesses) {
+      if (!this.state.weaknesses.includes(w)) this.state.weaknesses.push(w);
+    }
+
+    let followUp = null;
+    if (!analysis.strong && this.followUpCount < Interview.MAX_FOLLOWS_PER_Q) {
+      followUp = buildFollowUp(analysis.category, {
+        level: this.state.pressure_level,
+        usedCount: this.followUpCount,
+      });
+      this.followUpCount++;
+    }
+
+    return {
+      analysis,
+      pressure: {
+        level: this.state.pressure_level,
+        direction: Math.sign(this.state.pressure_level - before),
+        before,
+      },
+      followUp,               // string | null — agent speaks this verbatim
+      followUpBudget: Interview.MAX_FOLLOWS_PER_Q - this.followUpCount,
+      moveOnRecommended: analysis.strong || this.followUpCount >= Interview.MAX_FOLLOWS_PER_Q,
+    };
   }
 
   // Escalation phrasing by level (spoken verbatim by the agent).

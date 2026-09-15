@@ -25,6 +25,7 @@ import { mintToken } from './token.js';
 import { latencyStore } from './latency-store.js';
 import { getInterview, createInterview, endInterview, sessionCount } from './interview-engine.js';
 import { buildSystemPrompt, buildTools } from './instructions.js';
+// Day 3: answer analysis is used inside interview-engine.evaluateAnswer()
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -160,10 +161,38 @@ async function handleApi(req, res, url) {
     const iv = getInterview(body.interviewId || '');
     if (!iv) return sendJSON(res, 404, { error: 'no_such_interview' });
     iv.appendAnswer(body.answerText || '');
-    const pressure = iv.evaluatePressure(body.answerText || '');
+
+    let evaluation, guidance;
+    if (iv.evaluateAnswer) {
+      // Day 3 adaptive evaluation
+      evaluation = iv.evaluateAnswer(body.answerText || '');
+      guidance = evaluation.followUp
+        ?? (evaluation.moveOnRecommended
+          ? 'Thank the candidate briefly and call next_question now.'
+          : iv.pressurePhrase());
+      logUsage({ event: 'interview_answer', interviewId: body.interviewId, pressure: evaluation.pressure.level, specificity: evaluation.analysis.specificity });
+    } else {
+      const pressure = iv.evaluatePressure(body.answerText || '');
+      evaluation = { pressure, analysis: null, followUp: null, moveOnRecommended: false };
+      guidance = iv.pressurePhrase();
+      logUsage({ event: 'interview_answer', interviewId: body.interviewId, pressure: pressure.level });
+    }
     iv.advanceAfterAnswer();
-    logUsage({ event: 'interview_answer', interviewId: body.interviewId, pressure: pressure.level });
-    return sendJSON(res, 200, { snapshot: iv.snapshot(), pressure, guidance: iv.pressurePhrase() });
+    return sendJSON(res, 200, {
+      snapshot: iv.snapshot(),
+      pressure: evaluation.pressure,
+      analysis: evaluation.analysis ? {
+        specificity: evaluation.analysis.specificity,
+        strong: evaluation.analysis.strong,
+        weaknesses: evaluation.analysis.weaknesses,
+        category: evaluation.analysis.category,
+        signals: evaluation.analysis.signals,
+      } : null,
+      followUp: evaluation.followUp,
+      moveOnRecommended: evaluation.moveOnRecommended,
+      followUpBudget: evaluation.followUpBudget ?? null,
+      guidance,
+    });
   }
 
   if (route === 'POST /api/interview/next') {
