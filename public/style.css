@@ -116,6 +116,13 @@ select {
 .plabel { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; }
 .pblocks { font-size: 16px; letter-spacing: 2px; color: var(--warn); }
 .pnum { color: var(--dim); font-size: 12px; }
+.pblocks.spec { color: var(--ok); letter-spacing: 1px; font-size: 13px; }
+.weaknesses { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 14px; min-height: 22px; }
+.wtag {
+  background: rgba(255, 107, 107, 0.12); color: var(--err);
+  border: 1px solid rgba(255, 107, 107, 0.35); border-radius: 999px;
+  padding: 2px 9px; font-size: 11px;
+}
 .hint { color: var(--dim); font-size: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
 kbd { background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 11px; }
 

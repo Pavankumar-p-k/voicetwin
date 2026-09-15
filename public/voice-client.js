@@ -325,8 +325,22 @@ async function handleToolCall(name, args) {
     if (!res.ok) throw new Error(`answer api ${res.status}`);
     const data = await res.json();
     interview.snapshot = data.snapshot;
+    interview.lastAnalysis = data.analysis;
     EVT.push('interview.pressure', { level: data.pressure.level, direction: data.pressure.direction });
-    return JSON.stringify({ pressure_level: data.pressure.level, next_utterance_guidance: data.guidance });
+    if (data.analysis) EVT.push('interview.analysis', data.analysis);
+    if (data.followUp) {
+      // Day 3 differentiator: the agent speaks OUR follow-up verbatim.
+      return JSON.stringify({
+        pressure_level: data.pressure.level,
+        specificity: data.analysis?.specificity ?? null,
+        next_utterance_guidance: `Ask exactly: "${data.followUp}" — one sentence, nothing else.`,
+      });
+    }
+    return JSON.stringify({
+      pressure_level: data.pressure.level,
+      specificity: data.analysis?.specificity ?? null,
+      next_utterance_guidance: data.guidance,
+    });
   }
 
   if (name === 'next_question') {

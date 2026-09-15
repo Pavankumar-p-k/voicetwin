@@ -8,6 +8,7 @@ const els = {
   stateDot: $('stateDot'), stateText: $('stateText'),
   questionText: $('questionText'), qMeta: $('qMeta'),
   pressureBlocks: $('pressureBlocks'), pLevel: $('pLevel'),
+  specBlocks: $('specBlocks'), specNum: $('specNum'), weaknesses: $('weaknesses'),
   startBtn: $('startBtn'), endBtn: $('endBtn'),
   log: $('log'), footNote: $('footNote'),
 };
@@ -42,10 +43,31 @@ function renderState() {
   els.endBtn.disabled = !audio.ws;
 }
 
+const WEAKNESS_LABELS = {
+  no_personal_contribution: 'no "I" — contribution unclear',
+  no_measurable_result: 'no measurable result',
+  no_technical_depth: 'no technical depth',
+  hedging: 'hedging',
+  passive_voice: 'passive voice',
+  too_short: 'too short',
+};
+
+function renderAnalysis(a) {
+  if (!a) return;
+  const filled = '█'.repeat(a.specificity);
+  const empty = '░'.repeat(Math.max(0, 10 - a.specificity));
+  els.specBlocks.textContent = filled + empty;
+  els.specNum.textContent = `${a.specificity}/10${a.strong ? ' ✓' : ''}`;
+  els.weaknesses.innerHTML = a.weaknesses
+    .map((w) => `<span class="wtag">${WEAKNESS_LABELS[w] || w}</span>`)
+    .join('');
+}
+
 // Track agent speaking state from EVT (audio scheduling is inside voice-client).
 EVT.on((e) => {
   if (e.type === 'reply.audio') { audio.agentSpeaking = true; renderState(); }
   if (e.type === 'reply.done') { audio.agentSpeaking = false; renderState(); }
+  if (e.type === 'interview.analysis') renderAnalysis(e);
 });
 
 // ---- silence nudge: if question asked and no user speech for 8s, prompt via reply.create ----
@@ -86,6 +108,9 @@ EVT.on((e) => {
   if (e.type === 'interview.pressure') {
     logLine(`pressure → ${e.level}${e.direction > 0 ? ' ↑' : e.direction < 0 ? ' ↓' : ''}`, 'sys');
     renderState();
+  }
+  if (e.type === 'interview.analysis') {
+    logLine(`specificity ${e.specificity}/10 · weak: ${e.weaknesses.length ? e.weaknesses.join(', ') : 'none'}`, e.strong ? 'ok' : 'warn');
   }
   if (e.type === 'interview.question') {
     logLine(`next question loaded (${e.id})`, 'sys');
