@@ -23,6 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { CONFIG } from '../config.js';
 import { mintToken } from './token.js';
 import { latencyStore } from './latency-store.js';
+import { getInterview, createInterview, endInterview, sessionCount } from './interview-engine.js';
+import { buildSystemPrompt, buildTools } from './instructions.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -92,8 +94,8 @@ async function handleApi(req, res, url) {
   if (route === 'GET /api/health') {
     return sendJSON(res, 200, {
       ok: true,
-      day: 1,
       service: 'voicetwin',
+      day: 2,
       wsUrl: CONFIG.AAI.WS_URL,
       sampleRate: CONFIG.AAI.SAMPLE_RATE,
       voice: CONFIG.AAI.VOICE,
@@ -116,7 +118,79 @@ async function handleApi(req, res, url) {
   }
 
   if (route === 'GET /api/usage') {
-    return sendJSON(res, 200, { ...usage, note: 'Free tier discipline: short sessions, explicit session.end, no idle seconds billed.' });
+    return sendJSON(res, 200, { ...usage, activeInterviews: sessionCount(), note: 'Free tier discipline: short sessions, explicit session.end, no idle seconds billed.' });
+  }
+
+  // ---- Day 2: interview engine ----
+  if (route === 'POST /api/interview/start') {
+    try {
+      const body = await readBody(req);
+      // One browser tab = one live session id from the token flow; we key on a
+      // client-generated interview id so refreshes don't strand old sessions.
+      const ivId = body.interviewId || `iv_${Date.now()}`;
+      const iv = createInterview(ivId, { role: body.role || 'Software Engineer', mode: body.mode || 'normal' });
+      const firstQuestion = iv.nextQuestion();
+      if (!firstQuestion) return sendJSON(res, 500, { error: 'no_questions' });
+      logUsage({ event: 'interview_started', interviewId: ivId, mode: iv.mode });
+      return sendJSON(res, 201, {
+        interviewId: ivId,
+        question: firstQuestion,
+        snapshot: iv.snapshot(),
+        systemPrompt: buildSystemPrompt({
+          questionText: firstQuestion.text,
+          pressureLevel: iv.state.pressure_level,
+          answerCount: 0,
+          mode: iv.mode,
+        }),
+        tools: buildTools(),
+      });
+    } catch (err) {
+      return sendJSON(res, 400, { error: 'interview_start_failed', message: err.message });
+    }
+  }
+
+  if (route === 'GET /api/interview/state') {
+    const iv = getInterview(url.searchParams.get('id') || '');
+    if (!iv) return sendJSON(res, 404, { error: 'no_such_interview' });
+    return sendJSON(res, 200, { snapshot: iv.snapshot() });
+  }
+
+  if (route === 'POST /api/interview/answer') {
+    const body = await readBody(req);
+    const iv = getInterview(body.interviewId || '');
+    if (!iv) return sendJSON(res, 404, { error: 'no_such_interview' });
+    iv.appendAnswer(body.answerText || '');
+    const pressure = iv.evaluatePressure(body.answerText || '');
+    iv.advanceAfterAnswer();
+    logUsage({ event: 'interview_answer', interviewId: body.interviewId, pressure: pressure.level });
+    return sendJSON(res, 200, { snapshot: iv.snapshot(), pressure, guidance: iv.pressurePhrase() });
+  }
+
+  if (route === 'POST /api/interview/next') {
+    const body = await readBody(req);
+    const iv = getInterview(body.interviewId || '');
+    if (!iv) return sendJSON(res, 404, { error: 'no_such_interview' });
+    if (iv.state.answer_count === 0) return sendJSON(res, 400, { error: 'no_answers_yet' });
+    const q = iv.nextQuestion();
+    if (!q) return sendJSON(res, 200, { finished: true, snapshot: iv.snapshot() });
+    return sendJSON(res, 200, {
+      finished: false,
+      question: q,
+      snapshot: iv.snapshot(),
+      systemPrompt: buildSystemPrompt({
+        questionText: q.text,
+        pressureLevel: iv.state.pressure_level,
+        answerCount: iv.state.answer_count,
+        mode: iv.mode,
+      }),
+    });
+  }
+
+  if (route === 'POST /api/interview/end') {
+    const body = await readBody(req);
+    const snap = endInterview(body.interviewId || '');
+    logUsage({ event: 'interview_ended', interviewId: body.interviewId });
+    return sendJSON(res, 200, { ended: true, snapshot: snap });
   }
 
   if (route === 'POST /api/sessions') {
