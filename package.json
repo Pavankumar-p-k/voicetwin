@@ -1,0 +1,19 @@
+{
+  "name": "voicetwin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VoiceTwin - Adaptive Voice Interviewer. Day 1: voice reality + latency + Demo Safe Mode.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test:latency": "node tools/latency-test.js",
+    "check": "node tools/syntax-check.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
