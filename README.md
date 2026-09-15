@@ -13,9 +13,9 @@ Built on the [AssemblyAI Voice Agent API](https://www.assemblyai.com/docs/voice-
 
 | Day | Mission | Status |
 |-----|---------|--------|
-| **1** | **Voice + latency + fallback** | ✅ **this repo** |
-| 2 | Interview engine | ⬜ |
-| 3 | Adaptive follow-ups + pressure | ⬜ |
+| **1** | **Voice + latency + fallback** | ✅ live voice loop verified with real key (barge-in + cap auto-end confirmed) |
+| **2** | **Interview engine** | ✅ this release — 8-question loop, pressure ladder, tool-driven agent |
+| 3 | Adaptive follow-ups + pressure | ⬜ (ladder shipped; judgment/analysis deepens next) |
 | 4 | Evidence-based rubric scoring | ⬜ (rubrics already drafted — see `data/questions.json`) |
 | 5 | Coaching loop (before → after) | ⬜ |
 | 6 | Demo polish | ⬜ |
@@ -55,8 +55,29 @@ Pages:
 |-----|---------|
 | `/` | Voice console — start a session, talk |
 | `/harness.html` | Latency protocol runner + decision gate |
+| `/interview.html` | **The interviewer** — role/mode, ● LISTENING, pressure meter |
 | `/safe.html` | Demo Safe Mode (fallback replay, `Esc` from anywhere) |
-| `/api/health`, `/api/usage`, `/api/latency`, `/api/latency/summary` | introspection |
+| `/api/health`, `/api/usage`, `/api/interview/state?id=…`, `/api/latency/summary` | introspection |
+
+## How the interview loop works (Day 2)
+
+```
+browser                    our server                 AssemblyAI
+   │ POST /api/interview/start │                            │
+   │ ← question + prompt + tools                            │
+   │ session.update (prompt+tools+greeting) ────────────→ │
+   │ ←──────────── session.ready + greeting audio            │
+   │ ← input.audio ──────────────→ STT + neural turn detect  │
+   │ ← tool.call: check_answer / next_question               │
+   │ POST /api/interview/answer (pressure eval)              │
+   │ tool.result → agent speaks next line ← reply.audio ──── │
+```
+
+- **Pressure ladder 1–4**: vague answers push up, specific answers relax it
+  (Day 2 heuristic = content-word count; Day 3 replaces it with answer analysis)
+- **Turn detection retunes mid-session**: loose (2.2s) while you think, baseline (1.2s) once you answer
+- **8s silence** → the agent calmly nudges once (`reply.create`)
+- **Barge-in** flushes audio AND stale tool results
 
 ## The Day 1 test protocol
 
