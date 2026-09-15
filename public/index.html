@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceTwin — Day 1 Voice Console</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">VOICE<span>TWIN</span></div>
+    <div class="subtitle">Day 1 · voice reality + latency</div>
+    <nav class="nav">
+      <a href="/">Console</a>
+      <a href="/harness.html">Latency harness</a>
+      <a href="/safe.html">Safe mode</a>
+    </nav>
+  </header>
+
+  <main class="grid">
+    <section class="panel controls">
+      <div class="statusrow">
+        <span class="dot" id="micDot"></span>
+        <span id="micState">MIC idle</span>
+        <span class="dot agent" id="agentDot"></span>
+        <span id="agentState">AGENT idle</span>
+      </div>
+
+      <div class="timer" id="timer">0.0s</div>
+      <div class="capnote">session cap <span id="capNote">…</span> · <a href="/api/usage" target="_blank" rel="noopener">usage</a></div>
+
+      <div class="buttons">
+        <button id="startBtn" class="primary">Start session</button>
+        <button id="endBtn" class="danger" disabled>End session</button>
+      </div>
+
+      <label class="chk"><input type="checkbox" id="autorotate" /> auto-advance test label on each reply.done</label>
+
+      <div class="testlabel">
+        Current test: <select id="testSelect"></select>
+      </div>
+
+      <div class="hint">
+        Chrome/Edge recommended. Speak after “session ready”. The agent will greet first —
+        the greeting is not measured. Press <kbd>Esc</kbd> on any page for Demo Safe Mode (Page 4).
+      </div>
+    </section>
+
+    <section class="panel transcript">
+      <h2>Transcript</h2>
+      <div id="liveUser" class="liveuser"></div>
+      <div id="log" class="log"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>AssemblyAI Voice Agent · 24 kHz PCM16 · temp-token auth</span>
+    <span id="footNote"></span>
+  </footer>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

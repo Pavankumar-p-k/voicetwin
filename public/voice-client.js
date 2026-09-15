@@ -1,0 +1,286 @@
+// voice-client.js — VoiceTwin Day 1 (Page 2)
+// Browser voice loop: token -> WebSocket -> session.update -> streaming audio.
+// Also the instrumentation backbone for Page 3 (latency harness): every
+// protocol event lands in EVT (raw log) and hooks call timestamp() so the
+// harness page can measure T0..T3 without touching this file.
+
+import { CONFIG } from './config.js';
+
+// ---- shared instrumentation bus (Page 3 reads this) ----
+export const EVT = {
+  events: [],
+  listeners: new Set(),
+  push(type, payload = {}) {
+    const e = { type, t: performance.now(), wall: Date.now(), ...payload };
+    this.events.push(e);
+    for (const fn of this.listeners) { try { fn(e); } catch {} }
+    return e;
+  },
+  on(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); },
+  clear() { this.events = []; },
+};
+
+// Test label currently running ('normal' | 'short' | ...). Set by harness page.
+export const harnessState = { currentTest: 'normal', notes: '', interrupted: false };
+
+// Timestamps of the current turn (T0 set by harness via markTurnStart()).
+export const turn = {
+  T0: null, T1: null, T2: null, T3: null,
+  finalTranscript: '', agentText: '',
+  markTurnStart() {
+    this.T0 = performance.now(); this.T1 = null; this.T2 = null; this.T3 = null;
+    this.finalTranscript = ''; this.agentText = '';
+    harnessState.interrupted = false;
+    EVT.push('T0', { t: this.T0 });
+  },
+};
+
+// ---- audio state ----
+export const audio = {
+  ctx: null,            // AudioContext (device rate)
+  micStream: null,
+  workletNode: null,
+  ws: null,
+  ready: false,
+  sending: false,
+  sessionId: null,
+
+  // playback chain (Page 4 swaps this strategy for safe mode)
+  playbackQueue: [],    // { buffer, startAt }
+  playbackTime: 0,
+  flushPlayback() {
+    for (const q of this.playbackQueue) { try { q.src.stop(); } catch {} }
+    this.playbackQueue = [];
+    this.playbackTime = this.ctx ? this.ctx.currentTime : 0;
+  },
+};
+
+// ---- UI logger ----
+export function logLine(msg, cls = '') {
+  const el = document.getElementById('log');
+  if (!el) return;
+  const div = document.createElement('div');
+  div.className = `line ${cls}`.trim();
+  const t = ((performance.now() - performanceOrigin()) / 1000).toFixed(2);
+  div.textContent = `[${String(t).padStart(7)}s] ${msg}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  // cap log lines so the DOM never balloons during long test batches
+  while (el.childElementCount > 400) el.removeChild(el.firstChild);
+}
+function performanceOrigin() { return 0; }
+
+// ---- connection ----
+export async function startVoice() {
+  if (audio.ws) return;
+  audio.sending = false;
+
+  // 1. Temporary token from OUR server (API key never reaches the browser)
+  const tokenRes = await fetch('/api/voice-token');
+  if (!tokenRes.ok) throw new Error(`voice-token failed: ${tokenRes.status} ${await tokenRes.text()}`);
+  const { token, maxSessionSeconds } = await tokenRes.json();
+
+  // 2. Audio: device-rate context + worklet resampling to 24k (see worklet file)
+  audio.ctx = new AudioContext();
+  await audio.ctx.audioWorklet.addModule('/pcm-worklet.js');
+  audio.micStream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: false },
+  });
+  const source = audio.ctx.createMediaStreamSource(audio.micStream);
+  audio.workletNode = new AudioWorkletNode(audio.ctx, 'pcm-resample-processor', {
+    processorOptions: { targetSampleRate: CONFIG.AAI.SAMPLE_RATE, bufferSize: 480 },
+  });
+
+  // 3. WebSocket with ?token= (browser cannot set Authorization headers)
+  const wsUrl = new URL(CONFIG.AAI.WS_URL);
+  wsUrl.searchParams.set('token', token);
+  audio.ws = new WebSocket(wsUrl);
+
+  audio.ws.addEventListener('open', () => {
+    EVT.push('ws.open');
+    // Order matters: session.update FIRST, then wait for session.ready.
+    audio.ws.send(JSON.stringify({ type: 'session.update', session: inlineSession() }));
+  });
+
+  audio.ws.addEventListener('message', (ev) => onMessage(JSON.parse(ev.data)));
+  audio.ws.addEventListener('close', (ev) => {
+    EVT.push('ws.close', { code: ev.code });
+    logLine(`connection closed (${ev.code})`, 'dim');
+    audio.ready = false; audio.sending = false;
+  });
+  audio.ws.addEventListener('error', () => logLine('WebSocket error', 'err'));
+
+  // 4. Mic -> worklet -> b64 -> input.audio (gated on session.ready)
+  audio.workletNode.port.onmessage = (e) => {
+    if (!audio.ready || audio.ws.readyState !== WebSocket.OPEN) return;
+    const b64 = bytesToB64(new Uint8Array(e.data));
+    audio.ws.send(JSON.stringify({ type: 'input.audio', audio: b64 }));
+  };
+  source.connect(audio.workletNode);
+  // Intentionally NOT connecting worklet to destination (would echo mic).
+
+  audio.maxSessionSeconds = maxSessionSeconds;
+  EVT.push('client.start');
+}
+
+function inlineSession() {
+  // Inline configuration (mutually exclusive with agent_id).
+  // Day 1 = voice reality check: short replies, plain voice, no tools.
+  return {
+    system_prompt:
+      'You are a friendly assistant on a voice call. Keep every reply to one or two short sentences. ' +
+      'Answer what was asked, lead with the answer, and skip the preamble. If you don\u2019t know something, say so. No exclamation marks.',
+    greeting: 'Hey, what can I do for you?',
+    output: { voice: CONFIG.AAI.VOICE },
+  };
+}
+
+// ---- message handling + timestamps ----
+function onMessage(msg) {
+  switch (msg.type) {
+    case 'session.ready':
+      audio.ready = true;
+      audio.sessionId = msg.session_id;
+      EVT.push('session.ready', { sessionId: msg.session_id });
+      logLine(`session ready (${msg.session_id}) — start speaking`, 'ok');
+      fetch('/api/sessions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: msg.session_id, phase: 'started' }),
+      }).catch(() => {});
+      break;
+
+    case 'input.speech.started':
+      EVT.push('speech.started');
+      break;
+
+    case 'input.speech.stopped':
+      EVT.push('speech.stopped');
+      break;
+
+    case 'transcript.user.delta':
+      EVT.push('user.delta', { text: msg.text });
+      break;
+
+    case 'transcript.user':
+      // Final transcript of the user utterance -> T1 (first turn only)
+      EVT.push('user.final', { text: msg.text });
+      if (turn.T0 != null && turn.T1 == null) { turn.T1 = performance.now(); }
+      turn.finalTranscript = msg.text;
+      logLine(`You: ${msg.text}`);
+      break;
+
+    case 'reply.started':
+      EVT.push('reply.started', { replyId: msg.reply_id });
+      break;
+
+    case 'reply.audio': {
+      if (turn.T0 != null && turn.T2 == null) {
+        turn.T2 = performance.now();
+        EVT.push('T2', { t: turn.T2 });
+      }
+      playChunk(msg.data);
+      break;
+    }
+
+    case 'transcript.agent':
+      EVT.push('agent.text', { text: msg.text, interrupted: Boolean(msg.interrupted) });
+      turn.agentText = msg.text;
+      logLine(`Agent: ${msg.text}${msg.interrupted ? ' (interrupted)' : ''}`, 'agent');
+      break;
+
+    case 'reply.done': {
+      const interrupted = msg.status === 'interrupted';
+      EVT.push('reply.done', { status: msg.status || 'completed' });
+      if (interrupted) {
+        harnessState.interrupted = true;
+        audio.flushPlayback(); // barge-in: drop stale scheduled audio
+      }
+      if (turn.T0 != null && turn.T3 == null && !interrupted) {
+        turn.T3 = performance.now();
+        EVT.push('T3', { t: turn.T3 });
+      }
+      break;
+    }
+
+    case 'session.ended':
+      EVT.push('session.ended', { duration: msg.session_duration_seconds });
+      logLine(`session ended (${msg.session_duration_seconds?.toFixed?.(1) ?? '?'}s billed)`, 'dim');
+      fetch('/api/sessions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: audio.sessionId, phase: 'ended', durationSeconds: msg.session_duration_seconds }),
+      }).catch(() => {});
+      break;
+
+    case 'session.error':
+      EVT.push('session.error', { code: msg.code, message: msg.message });
+      logLine(`session error: ${msg.code} — ${msg.message}`, 'err');
+      break;
+
+    default:
+      EVT.push(msg.type, {});
+  }
+}
+
+// ---- playback: schedule chunks back-to-back at 24 kHz ----
+function playChunk(b64) {
+  if (!audio.ctx) return;
+  const pcm16 = b64ToPcm16(b64);
+  const f32 = new Float32Array(pcm16.length);
+  for (let i = 0; i < pcm16.length; i++) f32[i] = pcm16[i] / 32768;
+  const buffer = audio.ctx.createBuffer(1, f32.length, CONFIG.AAI.SAMPLE_RATE);
+  buffer.getChannelData(0).set(f32);
+  const src = audio.ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(audio.ctx.destination);
+  const now = audio.ctx.currentTime;
+  audio.playbackTime = Math.max(audio.playbackTime, now);
+  src.start(audio.playbackTime);
+  audio.playbackTime += buffer.duration;
+  audio.playbackQueue.push({ src, startAt: audio.playbackTime });
+  audio.playbackQueue = audio.playbackQueue.filter((q) => q.startAt > now - 1);
+}
+
+// ---- teardown (billing-critical: session.end BEFORE close) ----
+export function endVoice() {
+  try {
+    if (audio.ws && audio.ws.readyState === WebSocket.OPEN) {
+      audio.ws.send(JSON.stringify({ type: 'session.end' }));
+      // Server emits session.ended then closes; also hard-close shortly after.
+      setTimeout(() => { try { audio.ws?.close(); } catch {} }, 1500);
+    } else {
+      try { audio.ws?.close(); } catch {}
+    }
+  } catch {}
+  audio.ready = false; audio.sending = false;
+  audio.micStream?.getTracks().forEach((t) => t.stop());
+  audio.ctx?.close().catch(() => {});
+  audio.ctx = null; audio.workletNode = null; audio.ws = null;
+  logLine('session ended by user', 'dim');
+}
+
+// pagehide: send session.end synchronously so we never pay the 30s grace window
+window.addEventListener('pagehide', () => {
+  try {
+    if (audio.ws && audio.ws.readyState === WebSocket.OPEN) {
+      audio.ws.send(JSON.stringify({ type: 'session.end' }));
+    }
+  } catch {}
+});
+
+// ---- helpers ----
+function bytesToB64(bytes) {
+  let bin = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+function b64ToPcm16(b64) {
+  const bin = atob(b64);
+  const pcm = new Int16Array(bin.length / 2);
+  for (let i = 0; i < pcm.length; i++) {
+    pcm[i] = bin.charCodeAt(i * 2) | (bin.charCodeAt(i * 2 + 1) << 8);
+  }
+  return pcm;
+}
