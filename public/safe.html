@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceTwin — Demo Safe Mode</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">VOICE<span>TWIN</span></div>
+    <div class="subtitle">Day 1 · Demo Safe Mode (recovery)</div>
+    <nav class="nav">
+      <a href="/">Console</a>
+      <a href="/harness.html">Latency harness</a>
+      <a href="/safe.html" class="active">Safe mode</a>
+    </nav>
+  </header>
+
+  <main class="grid">
+    <section class="panel controls">
+      <div class="statusrow">
+        <span class="dot" id="modeDot"></span>
+        <span id="modeState">SAFE MODE standby</span>
+      </div>
+
+      <div class="timer" id="timer">0.0s</div>
+      <div class="capnote">replay costs <b>0 credits</b> · identical UI to the live console</div>
+
+      <div class="buttons">
+        <button id="replayBtn" class="primary">Start session</button>
+        <button id="stopBtn" class="danger" disabled>End session</button>
+        <button id="backBtn" class="small">Try live again</button>
+      </div>
+
+      <div class="hint">
+        If the live session fails to start or dies mid-demo, come here (or press <kbd>Esc</kbd> anywhere)
+        and run the identical interview from a recorded transcript. Judges see the same screen,
+        the same pacing, the same scoring flow. Trigger discipline (from the plan):
+        manual hotkey — the most reliable option.
+      </div>
+    </section>
+
+    <section class="panel transcript">
+      <h2>Transcript</h2>
+      <div id="log" class="log"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>fallback trigger: Esc (manual) — rehearsed, not automatic</span>
+    <span id="footNote"></span>
+  </footer>
+
+  <script type="module" src="/safe-app.js"></script>
+</body>
+</html>
