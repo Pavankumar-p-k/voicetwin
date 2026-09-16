@@ -79,6 +79,19 @@ browser                    our server                 AssemblyAI
 - **8s silence** → the agent calmly nudges once (`reply.create`)
 - **Barge-in** flushes audio AND stale tool results
 
+## Evidence-based scoring (Day 4)
+
+- **`server/rubric-scorer.js`** — deterministic detectors for each question's 5 rubric
+  points (scene, personal role, bottleneck, root cause, measurable result, …).
+  No LLM: every ✓/✗ is traceable to a named regex/detector in the source.
+- Scoring is **cumulative** within a question — evidence earned on the first answer
+  stays credited when the agent pushes for more.
+- When evidence is missing, the tool result names the **exact demand** to speak, in
+  rubric order: *"I'm looking for your specific contribution."*
+- `POST /api/interview/end` freezes per-question scores and returns the **report**:
+  evidence %, per-question X/5, weakest question + its missed points — the UI's
+  INTERVIEW COMPLETE panel and PRACTICE NOW button (Day 5's before/after loop) run off it.
+
 ## The Day 1 test protocol
 
 With a session live on `/harness.html`, run each scenario out loud, press **Space** after
