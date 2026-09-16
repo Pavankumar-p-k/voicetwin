@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyzeAnswer, buildFollowUp, pressureDelta } from './answer-analysis.js';
+import { scoreAnswer } from './rubric-scorer.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const QUESTIONS_PATH = path.join(ROOT, 'data', 'questions.json');
@@ -45,8 +46,10 @@ export class Interview {
       pressure_level: mode === 'pressure' ? 2 : 1,
       answer_count: 0,
       current_answer: '',      // latest final user transcript for this question
-      weaknesses: [],          // populated from Day 4 scoring
+      weaknesses: [],          // categorized signals (Day 3)
+      lastRubric: null,        // Day 4: rubric score for the current question
     };
+    this.rubricLog = [];       // one entry per answered question (report fuel)
     this.questionAskedAt = null;
     this.followUpCount = 0; // follow-ups asked for the current question
   }
@@ -95,39 +98,102 @@ export class Interview {
     return { level: this.state.pressure_level, direction, before, contentWords };
   }
 
-  // Day 3: full adaptive evaluation. Runs analysis, adjusts pressure,
-  // appends categorized weaknesses, and returns the exact follow-up to speak
-  // (or null when the answer is strong / follow-up budget is spent).
+  // Day 3+4: full adaptive evaluation. Runs the specificity analysis AND the
+  // rubric scorer, adjusts pressure, appends weaknesses, and returns the exact
+  // follow-up to speak. Day 4 rule: missing RUBRIC EVIDENCE outranks generic
+  // signals — the agent demands the first missing evidence point (rubric order
+  // = most fundamental first).
   evaluateAnswer(answerText) {
     const analysis = analyzeAnswer(answerText);
-    const before = this.state.pressure_level;
+    const rubric = scoreAnswer(this.state.question?.id, this.state.current_answer);
+    this.state.lastRubric = rubric;
 
-    const delta = analysis.wordCount < 1 ? +1 : pressureDelta(analysis);
+    const before = this.state.pressure_level;
+    let delta = analysis.wordCount < 1 ? +1 : pressureDelta(analysis);
+    if (rubric.pointsTotal > 0 && rubric.pointsEarned === 0) delta = Math.max(delta, +1); // no evidence at all
+    if (rubric.pointsTotal > 0 && rubric.pointsEarned === rubric.pointsTotal) delta = Math.min(delta, -1); // full evidence
     this.state.pressure_level = Math.min(4, Math.max(1, before + delta));
 
     for (const w of analysis.weaknesses) {
       if (!this.state.weaknesses.includes(w)) this.state.weaknesses.push(w);
     }
 
+    const missing = rubric.results.filter((r) => !r.earned);
+    const allEvidencePresent = rubric.pointsTotal > 0 && missing.length === 0;
+
     let followUp = null;
-    if (!analysis.strong && this.followUpCount < Interview.MAX_FOLLOWS_PER_Q) {
-      followUp = buildFollowUp(analysis.category, {
-        level: this.state.pressure_level,
-        usedCount: this.followUpCount,
-      });
+    let followUpKind = null;
+    if (!allEvidencePresent && this.followUpCount < Interview.MAX_FOLLOWS_PER_Q) {
+      if (missing.length > 0) {
+        // Day 4: demand the specific missing evidence — verbatim.
+        followUp = missing[0].demand;
+        followUpKind = 'missing_evidence';
+      } else {
+        // Rubric satisfied but specificity signals are weak — generic probe.
+        followUp = buildFollowUp(analysis.category, {
+          level: this.state.pressure_level,
+          usedCount: this.followUpCount,
+        });
+        followUpKind = 'signal';
+      }
       this.followUpCount++;
     }
 
     return {
       analysis,
+      rubric,
       pressure: {
         level: this.state.pressure_level,
         direction: Math.sign(this.state.pressure_level - before),
         before,
       },
       followUp,               // string | null — agent speaks this verbatim
+      followUpKind,           // 'missing_evidence' | 'signal' | null
       followUpBudget: Interview.MAX_FOLLOWS_PER_Q - this.followUpCount,
-      moveOnRecommended: analysis.strong || this.followUpCount >= Interview.MAX_FOLLOWS_PER_Q,
+      moveOnRecommended:
+        allEvidencePresent || this.followUpCount >= Interview.MAX_FOLLOWS_PER_Q,
+    };
+  }
+
+  // Close out the current question: freeze its rubric score into the log.
+  // Called by the /next route BEFORE serving the next question.
+  recordQuestionResult() {
+    const q = this.state.question;
+    if (!q || this.state.lastRubric == null) return;
+    const r = this.state.lastRubric;
+    this.rubricLog.push({
+      id: q.id,
+      question: q.text,
+      pointsEarned: r.pointsEarned,
+      pointsTotal: r.pointsTotal,
+      missed: r.results.filter((x) => !x.earned).map((x) => x.point),
+    });
+    this.state.lastRubric = null;
+  }
+
+  // Final evidence-based report (Day 4 deliverable — replaces a vibe score).
+  report() {
+    // A question still open when the interview ends still deserves its score.
+    this.recordQuestionResult();
+    const totalEarned = this.rubricLog.reduce((s, r) => s + r.pointsEarned, 0);
+    const totalPossible = this.rubricLog.reduce((s, r) => s + r.pointsTotal, 0);
+    // Weakest question = lowest earned ratio (ties -> more missed evidence).
+    const weakest = [...this.rubricLog].sort(
+      (a, b) => (a.pointsEarned / Math.max(1, a.pointsTotal)) - (b.pointsEarned / Math.max(1, b.pointsTotal))
+        || b.missed.length - a.missed.length,
+    )[0] || null;
+    return {
+      role: this.role,
+      mode: this.mode,
+      questionsAsked: this.rubricLog.length,
+      perQuestion: this.rubricLog,
+      totalEarned,
+      totalPossible,
+      evidenceScore: totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : null,
+      weakest: weakest
+        ? { id: weakest.id, question: weakest.question, pointsEarned: weakest.pointsEarned, pointsTotal: weakest.pointsTotal, missed: weakest.missed }
+        : null,
+      weaknesses: [...this.state.weaknesses],
     };
   }
 
@@ -161,6 +227,7 @@ export class Interview {
       followUpsUsed: this.followUpCount,
       idleNudgeAfterMs: Interview.IDLE_NUDGE_AFTER_MS,
       mode: this.mode,
+      rubricSoFar: this.rubricLog.map((r) => ({ id: r.id, pointsEarned: r.pointsEarned, pointsTotal: r.pointsTotal })),
     };
   }
 }

@@ -188,7 +188,9 @@ async function handleApi(req, res, url) {
         category: evaluation.analysis.category,
         signals: evaluation.analysis.signals,
       } : null,
+      rubric: evaluation.rubric ?? null, // Day 4: per-point evidence results
       followUp: evaluation.followUp,
+      followUpKind: evaluation.followUpKind ?? null,
       moveOnRecommended: evaluation.moveOnRecommended,
       followUpBudget: evaluation.followUpBudget ?? null,
       guidance,
@@ -200,6 +202,8 @@ async function handleApi(req, res, url) {
     const iv = getInterview(body.interviewId || '');
     if (!iv) return sendJSON(res, 404, { error: 'no_such_interview' });
     if (iv.state.answer_count === 0) return sendJSON(res, 400, { error: 'no_answers_yet' });
+    iv.recordQuestionResult(); // Day 4: freeze the rubric score before moving on
+    iv.state.answer_count = 0; // fresh answer window for the new question
     const q = iv.nextQuestion();
     if (!q) return sendJSON(res, 200, { finished: true, snapshot: iv.snapshot() });
     return sendJSON(res, 200, {
@@ -209,7 +213,7 @@ async function handleApi(req, res, url) {
       systemPrompt: buildSystemPrompt({
         questionText: q.text,
         pressureLevel: iv.state.pressure_level,
-        answerCount: iv.state.answer_count,
+        answerCount: 0,
         mode: iv.mode,
       }),
     });
@@ -217,9 +221,14 @@ async function handleApi(req, res, url) {
 
   if (route === 'POST /api/interview/end') {
     const body = await readBody(req);
-    const snap = endInterview(body.interviewId || '');
-    logUsage({ event: 'interview_ended', interviewId: body.interviewId });
-    return sendJSON(res, 200, { ended: true, snapshot: snap });
+    const iv = getInterview(body.interviewId || '');
+    let report = null;
+    if (iv) {
+      report = iv.report(); // Day 4: evidence-based report (also closes open question)
+      logUsage({ event: 'interview_report', interviewId: body.interviewId, evidenceScore: report.evidenceScore, questionsAsked: report.questionsAsked });
+    }
+    endInterview(body.interviewId || '');
+    return sendJSON(res, 200, { ended: true, report });
   }
 
   if (route === 'POST /api/sessions') {
