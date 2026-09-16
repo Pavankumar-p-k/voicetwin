@@ -16,16 +16,27 @@ const PRESSURE_PREFIX = {
 };
 
 // Generates the system prompt for the current interview moment.
-export function buildSystemPrompt({ questionText, pressureLevel, answerCount, mode }) {
+// Day 4: the rubric travels with the prompt — the agent knows exactly what
+// evidence the question demands, and check_answer tool results reference it.
+export function buildSystemPrompt({ questionText, pressureLevel, answerCount, mode, rubric }) {
   const parts = [
     BASE_PERSONA,
     `Interview mode: ${mode}. This is question ${answerCount + 1}.`,
     `The CURRENT question is: "${questionText}"`,
+  ];
+  if (Array.isArray(rubric) && rubric.length > 0) {
+    parts.push(
+      'The answer must contain this evidence: ' +
+        rubric.map((p, i) => `${i + 1}. ${p}`).join(' | ') + '.',
+      'When check_answer reports missing evidence, your next utterance must be exactly the demand line it gives you — verbatim, one sentence.',
+    );
+  }
+  parts.push(
     'Rules: Ask only the current question, then wait. If the candidate gives a short or vague answer, ' +
       'use the check_answer tool to decide pressure. To move on, call next_question. ' +
       'Do not invent new questions. Do not answer for the candidate. Keep every utterance to one sentence.',
     `Pressure guidance: ${PRESSURE_PREFIX[pressureLevel] || PRESSURE_PREFIX[1]}`,
-  ];
+  );
   return parts.join(' ');
 }
 

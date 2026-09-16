@@ -142,6 +142,7 @@ async function handleApi(req, res, url) {
           pressureLevel: iv.state.pressure_level,
           answerCount: 0,
           mode: iv.mode,
+          rubric: iv.state.question_rubric, // Day 4: evidence list travels with the prompt
         }),
         tools: buildTools(),
       });
@@ -215,6 +216,7 @@ async function handleApi(req, res, url) {
         pressureLevel: iv.state.pressure_level,
         answerCount: 0,
         mode: iv.mode,
+        rubric: iv.state.question_rubric, // Day 4: evidence list travels with the prompt
       }),
     });
   }

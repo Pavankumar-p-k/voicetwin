@@ -9,6 +9,8 @@ const els = {
   questionText: $('questionText'), qMeta: $('qMeta'),
   pressureBlocks: $('pressureBlocks'), pLevel: $('pLevel'),
   specBlocks: $('specBlocks'), specNum: $('specNum'), weaknesses: $('weaknesses'),
+  rubricBox: $('rubricBox'), rubricList: $('rubricList'), rubricScore: $('rubricScore'),
+  reportBox: $('reportBox'), repScore: $('repScore'), repSub: $('repSub'), repQuestions: $('repQuestions'), repWeak: $('repWeak'), practiceBtn: $('practiceBtn'),
   startBtn: $('startBtn'), endBtn: $('endBtn'),
   log: $('log'), footNote: $('footNote'),
 };
@@ -63,11 +65,47 @@ function renderAnalysis(a) {
     .join('');
 }
 
+// Day 4: the live evidence checklist — what the rubric demands vs what was said.
+function renderRubric(r) {
+  if (!r || !r.results || r.results.length === 0) { els.rubricBox.hidden = true; return; }
+  els.rubricBox.hidden = false;
+  els.rubricList.innerHTML = r.results
+    .map((pt) => `<div class="ritem ${pt.earned ? 'got' : 'miss'}">` +
+      `<span class="rcheck">${pt.earned ? '✓' : '✗'}</span>` +
+      `<span class="rpoint">${pt.short}</span>` +
+      (pt.earned ? '' : `<span class="rdemand">${pt.demand}</span>`) +
+      `</div>`)
+    .join('');
+  els.rubricScore.textContent = `${r.pointsEarned}/${r.pointsTotal}`;
+}
+
+// Day 4: final evidence report (replaces a vibe score).
+function renderReport(rep) {
+  if (!rep) return;
+  els.reportBox.hidden = false;
+  els.repScore.textContent = rep.evidenceScore == null ? '—' : `${rep.evidenceScore}%`;
+  els.repSub.textContent = `${rep.totalEarned}/${rep.totalPossible} evidence points · ${rep.questionsAsked} questions`;
+  els.repQuestions.innerHTML = (rep.perQuestion || [])
+    .map((q) => `<div class="rq"><span class="rqid">${q.id}</span>` +
+      `<span class="rqbar">${'█'.repeat(q.pointsEarned)}${'░'.repeat(Math.max(0, q.pointsTotal - q.pointsEarned))}</span>` +
+      `<span class="rqnum">${q.pointsEarned}/${q.pointsTotal}</span></div>`)
+    .join('');
+  if (rep.weakest) {
+    els.repWeak.innerHTML = `<b>${rep.weakest.id}</b> (${rep.weakest.pointsEarned}/${rep.weakest.pointsTotal}) — ` +
+      rep.weakest.missed.map((m) => m.toLowerCase()).join('; ');
+  } else {
+    els.repWeak.textContent = '—';
+  }
+}
+
 // Track agent speaking state from EVT (audio scheduling is inside voice-client).
 EVT.on((e) => {
   if (e.type === 'reply.audio') { audio.agentSpeaking = true; renderState(); }
   if (e.type === 'reply.done') { audio.agentSpeaking = false; renderState(); }
   if (e.type === 'interview.analysis') renderAnalysis(e);
+  if (e.type === 'interview.rubric') renderRubric(e);   // Day 4: live evidence chips
+  if (e.type === 'interview.question') { els.rubricBox.hidden = true; } // fresh question: reset checklist
+  if (e.type === 'interview.report') renderReport(e);   // Day 4: final evidence report
 });
 
 // ---- silence nudge: if question asked and no user speech for 8s, prompt via reply.create ----
@@ -111,6 +149,12 @@ EVT.on((e) => {
   }
   if (e.type === 'interview.analysis') {
     logLine(`specificity ${e.specificity}/10 · weak: ${e.weaknesses.length ? e.weaknesses.join(', ') : 'none'}`, e.strong ? 'ok' : 'warn');
+  }
+  if (e.type === 'interview.rubric') {
+    logLine(`evidence ${e.pointsEarned}/${e.pointsTotal} (${e.results.filter((x) => x.earned).map((x) => x.short).join(', ') || 'none earned'})`, e.pointsEarned >= 4 ? 'ok' : 'warn');
+  }
+  if (e.type === 'interview.report') {
+    logLine(`evidence score ${e.evidenceScore}% (${e.totalEarned}/${e.totalPossible}) · weakest: ${e.weakest ? `${e.weakest.id} ${e.weakest.pointsEarned}/${e.weakest.pointsTotal}` : '—'}`, 'sys');
   }
   if (e.type === 'interview.question') {
     logLine(`next question loaded (${e.id})`, 'sys');
@@ -163,6 +207,10 @@ function end() {
 
 els.startBtn.addEventListener('click', start);
 els.endBtn.addEventListener('click', end);
+els.practiceBtn.addEventListener('click', () => {
+  // Day 5 hook: the coaching loop starts from the weakest question.
+  logLine('PRACTICE NOW → Day 5 coaching loop (before → after comparison)', 'sys');
+});
 window.addEventListener('pagehide', () => { disarmNudge(); teardownInterview(); });
 renderState();
 

@@ -9,7 +9,7 @@
 <body>
   <header class="topbar">
     <div class="brand">VOICE<span>TWIN</span></div>
-    <div class="subtitle">Day 2 · interview engine</div>
+    <div class="subtitle">Day 4 · evidence-based scoring</div>
     <nav class="nav">
       <a href="/">Console</a>
       <a href="/harness.html">Latency harness</a>
@@ -60,6 +60,23 @@
       </div>
 
       <div class="weaknesses" id="weaknesses"></div>
+
+      <div class="rubricbox" id="rubricBox" hidden>
+        <div class="rlabel">EVIDENCE CHECK</div>
+        <div id="rubricList" class="rlist"></div>
+        <div class="rscore"><span id="rubricScore">0/5</span> evidence points</div>
+      </div>
+
+      <div class="reportbox" id="reportBox" hidden>
+        <div class="rlabel">INTERVIEW COMPLETE — EVIDENCE REPORT</div>
+        <div class="rheadline"><span id="repScore">—</span><span id="repSub" class="rsub"></span></div>
+        <div id="repQuestions" class="rquestions"></div>
+        <div class="rweakest">
+          <div class="rlabel2">PRIMARY WEAKNESS</div>
+          <div id="repWeak"></div>
+          <button id="practiceBtn" class="primary small">PRACTICE NOW</button>
+        </div>
+      </div>
 
       <div class="buttons">
         <button id="startBtn" class="primary">Start interview</button>

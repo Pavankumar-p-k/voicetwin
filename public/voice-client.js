@@ -326,19 +326,23 @@ async function handleToolCall(name, args) {
     const data = await res.json();
     interview.snapshot = data.snapshot;
     interview.lastAnalysis = data.analysis;
+    interview.lastRubric = data.rubric ?? null;
     EVT.push('interview.pressure', { level: data.pressure.level, direction: data.pressure.direction });
     if (data.analysis) EVT.push('interview.analysis', data.analysis);
+    if (data.rubric) EVT.push('interview.rubric', data.rubric);
     if (data.followUp) {
-      // Day 3 differentiator: the agent speaks OUR follow-up verbatim.
+      // Day 3/4 differentiator: the agent speaks OUR follow-up verbatim.
       return JSON.stringify({
         pressure_level: data.pressure.level,
         specificity: data.analysis?.specificity ?? null,
+        evidence: data.rubric ? `${data.rubric.pointsEarned}/${data.rubric.pointsTotal} rubric points earned` : null,
         next_utterance_guidance: `Ask exactly: "${data.followUp}" — one sentence, nothing else.`,
       });
     }
     return JSON.stringify({
       pressure_level: data.pressure.level,
       specificity: data.analysis?.specificity ?? null,
+      evidence: data.rubric ? `${data.rubric.pointsEarned}/${data.rubric.pointsTotal} rubric points earned` : null,
       next_utterance_guidance: data.guidance,
     });
   }
@@ -357,6 +361,7 @@ async function handleToolCall(name, args) {
     interview.question = data.question;
     interview.systemPrompt = data.systemPrompt;
     interview.snapshot = data.snapshot;
+    interview.lastRubric = null; // fresh question, fresh evidence
     interview.waitingForAnswer = true;
     setTurnDetection(TD_LOOSE); // open-ended question: give the candidate room
     EVT.push('interview.question', { id: data.question.id });
@@ -368,6 +373,8 @@ async function handleToolCall(name, args) {
     fetch('/api/interview/end', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interviewId: interview.id }),
+    }).then((r) => r.json()).then((d) => {
+      if (d.report) EVT.push('interview.report', d.report);
     }).catch(() => {});
     EVT.push('interview.ended.by_agent', {});
     return JSON.stringify({ ended: true, closing_guidance: 'Close politely in one short sentence.' });
