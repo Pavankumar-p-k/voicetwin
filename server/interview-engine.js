@@ -244,11 +244,14 @@ export class Interview {
 const sessions = new Map();
 
 export function getInterview(sessionId) {
-  return sessions.get(sessionId) || null;
+  const iv = sessions.get(sessionId) || null;
+  if (iv) iv.lastTouched = Date.now();
+  return iv;
 }
 
 export function createInterview(sessionId, opts) {
   const iv = new Interview(opts);
+  iv.lastTouched = Date.now();
   sessions.set(sessionId, iv);
   return iv;
 }
@@ -261,4 +264,18 @@ export function endInterview(sessionId) {
 
 export function sessionCount() {
   return sessions.size;
+}
+
+// Day 7 (Test I): a browser refresh never calls /end, so the in-memory
+// interview would linger forever. Idle sessions older than 30 min are swept.
+export function sweepSessions(maxIdleMs = 30 * 60_000) {
+  const now = Date.now();
+  let swept = 0;
+  for (const [id, iv] of sessions) {
+    if (now - (iv.lastTouched || 0) > maxIdleMs) {
+      sessions.delete(id);
+      swept++;
+    }
+  }
+  return swept;
 }

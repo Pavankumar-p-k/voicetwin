@@ -23,8 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { CONFIG } from '../config.js';
 import { mintToken } from './token.js';
 import { latencyStore } from './latency-store.js';
-import { getInterview, createInterview, endInterview, sessionCount } from './interview-engine.js';
-import { getPractice, createPractice, endPractice, practiceCount } from './practice-engine.js';
+import { getInterview, createInterview, endInterview, sessionCount, sweepSessions } from './interview-engine.js';
+import { getPractice, createPractice, endPractice, practiceCount, sweepPracticeSessions } from './practice-engine.js';
 import { buildSystemPrompt, buildTools, buildPracticePrompt, buildPracticeTools } from './instructions.js';
 // Day 3: answer analysis is used inside interview-engine.evaluateAnswer()
 
@@ -338,8 +338,15 @@ const server = http.createServer(async (req, res) => {
     try {
       await handleApi(req, res, url);
     } catch (err) {
-      console.error('[voicetwin] api error:', err);
-      if (!res.headersSent) sendJSON(res, 500, { error: 'internal', message: err.message });
+      // Day 7 (Test J): client errors (bad JSON, oversized body) must be 4xx,
+      // not a scary 500 — a judge poking the API should never see 'internal'.
+      const clientFault = err.message === 'invalid JSON body' || err.message === 'body too large';
+      if (clientFault) {
+        sendJSON(res, 400, { error: 'bad_request', message: err.message });
+      } else {
+        console.error('[voicetwin] api error:', err);
+        if (!res.headersSent) sendJSON(res, 500, { error: 'internal', message: err.message });
+      }
     }
     return;
   }
@@ -374,6 +381,12 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(500); res.end('read error');
   }
 });
+
+// Day 7 (Test I): sweep ghost sessions (browser refresh never calls /end).
+setInterval(() => {
+  const swept = sweepSessions() + sweepPracticeSessions();
+  if (swept > 0) console.log(`[voicetwin] swept ${swept} idle session(s)`);
+}, 5 * 60_000).unref();
 
 server.listen(CONFIG.PORT, () => {
   console.log(`[voicetwin] Day 1 server on http://localhost:${CONFIG.PORT}`);

@@ -174,11 +174,14 @@ export class Practice {
 const sessions = new Map();
 
 export function getPractice(id) {
-  return sessions.get(id) || null;
+  const p = sessions.get(id) || null;
+  if (p) p.lastTouched = Date.now();
+  return p;
 }
 
 export function createPractice(id, opts) {
   const p = new Practice(opts);
+  p.lastTouched = Date.now();
   sessions.set(id, p);
   return p;
 }
@@ -191,4 +194,17 @@ export function endPractice(id) {
 
 export function practiceCount() {
   return sessions.size;
+}
+
+// Day 7 (Test I): same ghost-session sweep as interviews (30 min idle).
+export function sweepPracticeSessions(maxIdleMs = 30 * 60_000) {
+  const now = Date.now();
+  let swept = 0;
+  for (const [id, p] of sessions) {
+    if (now - (p.lastTouched || 0) > maxIdleMs) {
+      sessions.delete(id);
+      swept++;
+    }
+  }
+  return swept;
 }
