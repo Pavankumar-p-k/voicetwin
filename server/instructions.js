@@ -40,6 +40,45 @@ export function buildSystemPrompt({ questionText, pressureLevel, answerCount, mo
   return parts.join(' ');
 }
 
+// Generates the system prompt for a practice session (Day 5).
+// The coach re-asks the weak question and demands the missed evidence,
+// using the same voice and rules as the interviewer — one persona.
+export function buildPracticePrompt({ questionText, before }) {
+  return [
+    BASE_PERSONA,
+    `This is targeted PRACTICE on one question. The candidate scored ${before.pointsEarned} out of ${before.pointsTotal} on it in the interview.`,
+    `The CURRENT question is: "${questionText}"`,
+    'Your job: re-ask the question, listen, and after each attempt call the check_attempt tool.',
+    'When check_attempt returns a demand line, your next utterance must be exactly that demand — verbatim, one sentence.',
+    'Acknowledge genuine improvement briefly before the next demand ("Better — that covered it." only when told).',
+    'When check_attempt says done, call end_practice.',
+  ].join(' ');
+}
+
+// Client-side function tools for the practice loop.
+export function buildPracticeTools() {
+  return [
+    {
+      type: 'function',
+      name: 'check_attempt',
+      description: 'Submit the candidate\'s practice attempt for evidence scoring. Returns the exact demand to speak next, or done.',
+      parameters: {
+        type: 'object',
+        properties: {
+          attempt_text: { type: 'string', description: 'The candidate\'s attempt, verbatim.' },
+        },
+        required: ['attempt_text'],
+      },
+    },
+    {
+      type: 'function',
+      name: 'end_practice',
+      description: 'Practice is complete. Close the practice session politely in one sentence.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  ];
+}
+
 // Client-side function tools (flat schema per AssemblyAI Voice Agent docs).
 export function buildTools() {
   return [

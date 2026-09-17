@@ -24,7 +24,8 @@ import { CONFIG } from '../config.js';
 import { mintToken } from './token.js';
 import { latencyStore } from './latency-store.js';
 import { getInterview, createInterview, endInterview, sessionCount } from './interview-engine.js';
-import { buildSystemPrompt, buildTools } from './instructions.js';
+import { getPractice, createPractice, endPractice, practiceCount } from './practice-engine.js';
+import { buildSystemPrompt, buildTools, buildPracticePrompt, buildPracticeTools } from './instructions.js';
 // Day 3: answer analysis is used inside interview-engine.evaluateAnswer()
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -231,6 +232,64 @@ async function handleApi(req, res, url) {
     }
     endInterview(body.interviewId || '');
     return sendJSON(res, 200, { ended: true, report });
+  }
+
+  // ---- Day 5: coaching loop (weakness → practice → before/after) ----
+  if (route === 'POST /api/practice/start') {
+    try {
+      const body = await readBody(req);
+      const prId = body.practiceId || `pr_${Date.now()}`;
+      const p = createPractice(prId, {
+        role: body.role || 'Software Engineer',
+        questionId: body.questionId,
+        missed: Array.isArray(body.missed) ? body.missed : [],
+        interviewReport: body.interviewReport || null, // Day 4 report's weakest feeds BEFORE
+      });
+      logUsage({ event: 'practice_started', practiceId: prId, questionId: p.questionId, beforeEarned: p.before.pointsEarned });
+      return sendJSON(res, 201, {
+        practiceId: prId,
+        question: p.state.question,
+        before: p.before,
+        snapshot: p.snapshot(),
+        systemPrompt: buildPracticePrompt({ questionText: p.questionText, before: p.before }),
+        tools: buildPracticeTools(),
+      });
+    } catch (err) {
+      return sendJSON(res, 400, { error: 'practice_start_failed', message: err.message });
+    }
+  }
+
+  if (route === 'POST /api/practice/answer') {
+    const body = await readBody(req);
+    const p = getPractice(body.practiceId || '');
+    if (!p) return sendJSON(res, 404, { error: 'no_such_practice' });
+    const evaluation = p.evaluateAttempt(body.answerText || '');
+    logUsage({ event: 'practice_attempt', practiceId: body.practiceId, attempts: evaluation.attempts, delta: evaluation.delta, done: evaluation.done });
+    return sendJSON(res, 200, {
+      snapshot: p.snapshot(),
+      rubric: evaluation.rubric ?? null,
+      analysis: evaluation.analysis ? {
+        specificity: evaluation.analysis.specificity,
+        strong: evaluation.analysis.strong,
+        weaknesses: evaluation.analysis.weaknesses,
+      } : null,
+      delta: evaluation.delta,
+      attempts: evaluation.attempts,
+      attemptsRemaining: evaluation.attemptsRemaining,
+      done: evaluation.done,
+      coaching: evaluation.coaching,
+    });
+  }
+
+  if (route === 'POST /api/practice/end') {
+    const body = await readBody(req);
+    const p = getPractice(body.practiceId || '');
+    const result = p
+      ? p.result()
+      : null;
+    if (p) logUsage({ event: 'practice_result', practiceId: body.practiceId, delta: result.delta, before: result.before.evidencePct, after: result.after.evidencePct });
+    endPractice(body.practiceId || '');
+    return sendJSON(res, 200, { ended: true, result });
   }
 
   if (route === 'POST /api/sessions') {
