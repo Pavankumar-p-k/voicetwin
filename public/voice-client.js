@@ -27,9 +27,14 @@ export const harnessState = { currentTest: 'normal', notes: '', interrupted: fal
 export const turn = {
   T0: null, T1: null, T2: null, T3: null,
   finalTranscript: '', agentText: '',
+  // Day 7 fix: T2/T3 are only meaningful for a reply the USER triggered.
+  // Set on transcript.user, consumed by the next completed reply. Greeting,
+  // silence-nudge and post-tool follow-up replies never stamp the gate.
+  awaitingReply: false,
   markTurnStart() {
     this.T0 = performance.now(); this.T1 = null; this.T2 = null; this.T3 = null;
     this.finalTranscript = ''; this.agentText = '';
+    this.awaitingReply = false;
     harnessState.interrupted = false;
     EVT.push('T0', { t: this.T0 });
   },
@@ -204,6 +209,7 @@ export async function setTurnDetection(td) {
   }
 }
 export const TD_BASELINE = { vad_threshold: 0.5, min_silence: 1200, max_silence: 3000, interrupt_response: true };
+// Echo-safe preset: higher VAD threshold keeps speaker bleed from arming turns.
 export const TD_LOOSE = { vad_threshold: 0.45, min_silence: 2200, max_silence: 6000, interrupt_response: true };
 
 // ---- message handling + timestamps ----
@@ -223,8 +229,12 @@ async function onMessage(msg) {
     case 'input.speech.started':
       EVT.push('speech.started');
       // T0 = user turn start. Auto-arm on the first utterance and re-arm
-      // after a completed turn, so a fresh Space-press always has a turn.
-      if (turn.T0 == null || turn.T3 != null) turn.markTurnStart();
+      // after a completed turn — but never while the agent is speaking
+      // (mic echo of agent speech must not start a measured turn) and
+      // never while a measured turn is already in flight (T0 set, no T3).
+      if ((turn.T0 == null || turn.T3 != null) && !audio.agentSpeaking && !turn.awaitingReply) {
+        turn.markTurnStart();
+      }
       break;
 
     case 'input.speech.stopped':
@@ -241,6 +251,8 @@ async function onMessage(msg) {
       if (turn.T0 != null && turn.T1 == null) { turn.T1 = performance.now(); }
       turn.finalTranscript = msg.text;
       turn.agentText = '';
+      turn.T1 = turn.T0 != null && turn.T1 == null ? performance.now() : turn.T1;
+      turn.awaitingReply = true; // next agent reply is the measured one
       interview.lastUserText = msg.text;
       practice.lastUserText = msg.text;
       logLine(`You: ${msg.text}`);
@@ -253,6 +265,11 @@ async function onMessage(msg) {
 
     case 'reply.started':
       EVT.push('reply.started', { replyId: msg.reply_id });
+      // Day 7 fix: a fresh agent reply invalidates any pending user-turn stamp.
+      // Without this, mic echo of the agent's own voice re-arms T0 mid-reply,
+      // which (a) corrupts latency samples and (b) makes the NEXT tool call see
+      // a "new user turn" — prompting the agent to re-ask the same question.
+      turn.markTurnStart();
       break;
 
     case 'tool.call': {
@@ -269,11 +286,15 @@ async function onMessage(msg) {
     }
 
     case 'reply.audio': {
-      if (turn.T0 != null && turn.T2 == null) {
+      // Stamp T2 only on the first agent audio that actually answers the
+      // user's utterance. Greeting/nudge replies (awaitingReply=false) are
+      // never measured — this is what killed the impossible 6 ms sample.
+      if (turn.awaitingReply && turn.T0 != null && turn.T2 == null) {
         turn.T2 = performance.now();
         EVT.push('T2', { t: turn.T2 });
         logLine(`⏱ first audio in ${Math.round(turn.T2 - turn.T0)} ms (T2−T0)`, 'sys');
       }
+      audio.agentSpeaking = true; // synchronous: guards T0 re-arm during echo
       playChunk(msg.data);
       break;
     }
@@ -287,6 +308,7 @@ async function onMessage(msg) {
     case 'reply.done': {
       const interrupted = msg.status === 'interrupted';
       EVT.push('reply.done', { status: msg.status || 'completed' });
+      audio.agentSpeaking = false; // synchronous flag for turn-arming guard
       if (interrupted) {
         harnessState.interrupted = true;
         audio.flushPlayback(); // barge-in: drop stale scheduled audio
@@ -298,14 +320,15 @@ async function onMessage(msg) {
           EVT.push('tool.result.sent', { callId: t.call_id });
         }
         interview.toolsPending.length = 0;
+        if (turn.awaitingReply && turn.T2 != null && turn.T3 == null) {
+          turn.T3 = performance.now();
+          EVT.push('T3', { t: turn.T3 });
+          const dt = Math.round(turn.T3 - turn.T0);
+          const v = dt <= CONFIG.GATE.GREEN_MAX_MS ? 'GREEN' : dt <= CONFIG.GATE.YELLOW_MAX_MS ? 'YELLOW' : 'RED';
+          logLine(`⏱ reply heard in ${dt} ms (T3−T0) — gate ${v}`, 'sys');
+        }
       }
-      if (turn.T0 != null && turn.T3 == null && !interrupted) {
-        turn.T3 = performance.now();
-        EVT.push('T3', { t: turn.T3 });
-        const dt = Math.round(turn.T3 - turn.T0);
-        const v = dt <= CONFIG.GATE.GREEN_MAX_MS ? 'GREEN' : dt <= CONFIG.GATE.YELLOW_MAX_MS ? 'YELLOW' : 'RED';
-        logLine(`⏱ reply heard in ${dt} ms (T3−T0) — gate ${v}`, 'sys');
-      }
+      turn.awaitingReply = false; // turn consumed (measured, interrupted, or agent-initiated)
       break;
     }
 

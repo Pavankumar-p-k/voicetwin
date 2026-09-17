@@ -153,18 +153,25 @@ function armNudge() {
   nudgeTimer = setTimeout(() => {
     if (!interview.active || !audio.ws || audio.ws.readyState !== WebSocket.OPEN) return;
     if (audio.agentSpeaking) { armNudge(); return; }
-    if (interview.waitingForAnswer && !interview.lastUserText) {
-      audio.ws.send(JSON.stringify({
-        type: 'reply.create',
-        instructions: 'The candidate is silent. Calmly ask once: take your time, then answer the question.',
-      }));
-      logLine('(nudge: candidate silent 8s)', 'dim');
-    }
+    if (interview.waitingForAnswer && !interview.lastUserText) nudge();
     armNudge(); // stay armed while waiting
   }, NUDGE_AFTER_MS);
 }
 
 function disarmNudge() { clearTimeout(nudgeTimer); nudgeTimer = null; }
+
+// Day 7 fix: the silence nudge created an agent-initiated reply with no user
+// utterance, which (a) polluted latency samples and (b) left `lastUserText`
+// empty so the next check_answer submitted an empty answer — the agent then
+// re-asked the question. The nudge now only speaks; it never re-asks.
+function nudge() {
+  if (!audio.ws || audio.ws.readyState !== WebSocket.OPEN) return;
+  audio.ws.send(JSON.stringify({
+    type: 'reply.create',
+    instructions: 'Say exactly: take your time. Then stop speaking and wait.',
+  }));
+  logLine('(nudge: candidate silent 8s)', 'dim');
+}
 
 // EVT reactions for the interview flow
 EVT.on((e) => {
@@ -173,6 +180,8 @@ EVT.on((e) => {
     logLine(`live — question: ${interview.question?.text ?? '?'}`, 'sys');
     armNudge();
   }
+  if (e.type === 'speech.started') { disarmNudge(); }  // any user speech cancels it
+  if (e.type === 'reply.started') { disarmNudge(); }   // agent speaking — pause the timer
   if (e.type === 'user.final') {
     interview.lastUserText = e.text || '';
     disarmNudge();
