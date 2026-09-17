@@ -136,6 +136,12 @@ EVT.on((e) => {
   if (e.type === 'interview.rubric') renderRubric(e);   // Day 4: live evidence chips
   if (e.type === 'interview.question') { els.rubricBox.hidden = true; } // fresh question: reset checklist
   if (e.type === 'interview.report') renderReport(e);   // Day 4: final evidence report
+  if (e.type === 'session.dropped') {  // Day 7: recover cleanly mid-interview
+    disarmNudge();
+    teardownInterview();               // free server-side state (no report)
+    audio.sessionStartAt = null;
+    logLine('connection lost — press Start interview to rejoin', 'err');
+  }
 });
 
 // ---- silence nudge: if question asked and no user speech for 8s, prompt via reply.create ----

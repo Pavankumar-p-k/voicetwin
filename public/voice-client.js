@@ -137,7 +137,7 @@ export async function startVoice() {
   audio.ws.addEventListener('close', (ev) => {
     EVT.push('ws.close', { code: ev.code });
     logLine(`connection closed (${ev.code})`, 'dim');
-    audio.ready = false; audio.sending = false;
+    handleDisconnect();
   });
   audio.ws.addEventListener('error', () => logLine('WebSocket error', 'err'));
 
@@ -519,6 +519,18 @@ export function teardownPractice() {
 }
 
 // ---- teardown (billing-critical: session.end BEFORE close) ----
+// Day 7 (Test D/I): a dropped socket (bad Wi-Fi, server-side cap close, token
+// expiry) must leave the client able to START AGAIN — stop the mic, close the
+// audio context, clear every handle. Idempotent: endVoice's delayed close and
+// genuine drops both land here; second pass is a no-op.
+function handleDisconnect() {
+  audio.ready = false; audio.sending = false;
+  audio.micStream?.getTracks().forEach((t) => t.stop());
+  audio.ctx?.close().catch(() => {});
+  audio.ctx = null; audio.workletNode = null; audio.ws = null;
+  EVT.push('session.dropped', {});
+}
+
 export function endVoice() {
   try {
     if (audio.ws && audio.ws.readyState === WebSocket.OPEN) {
@@ -529,10 +541,7 @@ export function endVoice() {
       try { audio.ws?.close(); } catch {}
     }
   } catch {}
-  audio.ready = false; audio.sending = false;
-  audio.micStream?.getTracks().forEach((t) => t.stop());
-  audio.ctx?.close().catch(() => {});
-  audio.ctx = null; audio.workletNode = null; audio.ws = null;
+  handleDisconnect();
   logLine('session ended by user', 'dim');
 }
 

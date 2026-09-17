@@ -112,6 +112,10 @@ EVT.on((e) => {
     renderAfter(e);
     logLine(`BEFORE ${e.before.pointsEarned}/${e.before.pointsTotal} → AFTER ${e.after.pointsEarned}/${e.after.pointsTotal} (${e.delta >= 0 ? '+' : ''}${e.delta})`, 'sys');
   }
+  if (e.type === 'session.dropped') {  // Day 7: recover cleanly mid-practice
+    teardownPractice();
+    logLine('connection lost — press Start practice to rejoin', 'err');
+  }
   if (e.type === 'transcript.agent') { /* logged by voice-client */ }
 });
 
