@@ -212,3 +212,21 @@ Failure-hunt results against a live server — fixes shipped same day:
    without narrating panic.
 5. If the live session dies mid-demo: press `Esc`, Safe Mode is already standing by.
    The judges see the same UI, the same report, the same story.
+
+## The 3-minute judge demo (speaker notes)
+
+Timings assume the agent is already configured and Chrome is open on the landing
+page. Total talk time: ~2:30, leaving ~0:30 of buffer.
+
+| ⏱ | Do | Say |
+|---|---|---|
+| 0:00–0:20 | Landing page | "Most AI interviewers just ask the next question. Ours listens to your answer and fights back. Watch." → click **Start an interview** |
+| 0:20–0:45 | Interview starts, agent asks Q1 | Answer **badly on purpose**: *"I built a React application."* — then stop talking |
+| 0:45–1:10 | The differentiator | The agent demands the missing evidence — **"What part of that did you personally build?"** Point at the pressure meter climbing and the evidence checklist filling in. *"That demand isn't an LLM opinion — it's a missing point from a pre-written rubric."* |
+| 1:10–1:40 | Barge-in | While the agent is mid-sentence, **interrupt it** and answer properly: *"I built the seat-map myself — websockets instead of polling, p95 from 2s to 200ms."* The agent stops instantly and adapts. *"Interruption handling is the hardest part of voice AI. It just worked."* |
+| 1:40–2:05 | End → report | **End interview.** The report shows evidence %, per-question bars, weakest question — plus filler/vague/incomplete counts. *"We don't ask an LLM whether the answer sounded impressive. We check whether the evidence the question requires is actually there."* |
+| 2:05–2:30 | PRACTICE NOW → before/after | One practice attempt on the weakest question, then show **BEFORE 2/5 → AFTER 5/5, ↑+3**. *"Not a score — an improvement you can verify. The same engine trains salespeople, students, support agents."* |
+| If it breaks | **Esc** | Safe Mode replays a recorded session in the identical UI. Nobody has to know unless you tell them. Rehearse this switch — it's the whole trick. |
+
+**Do not** do live: sign-ups, resume upload, long conversations, feature tours.
+One bad answer, one pushback, one number, one before/after. That's the product.

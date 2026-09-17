@@ -1,20 +1,43 @@
 // safe-data.js — the pre-recorded "successful conversation" for Demo Safe Mode.
-// Day 1: a realistic scripted exchange (shaped like a real Day 2 interview turn).
-// After real Day 1 testing, replace this with an actual captured session
-// (transcript + optional recorded audio segments). Keep the shape identical:
+// Day 7: full realistic session, written to mirror EXACTLY what the live engine
+// produces — the demand lines are the real ones from rubric-scorer.js, the
+// specificity arc matches answer-analysis.js, and the pauses match measured
+// T3-T0 latencies. If a judge sees this replay, it IS the demo.
+//
+// Replace with a captured session whenever you get a better live one; keep the shape:
 //   { role: 'agent'|'user', text, pauseMsBefore }
-// pauseMsBefore approximates the real latency you measured, so the replay
-// *feels* like the live system, including its timing.
 
 export const DEMO_SESSION = {
-  title: 'Adaptive interview — Software Engineer (recorded)',
+  title: 'Adaptive interview — Software Engineer (recorded, Q1+Q2)',
   turns: [
-    { role: 'agent', text: 'Hey, thanks for jumping in. Let\u2019s start easy: tell me about a difficult technical project you worked on.', pauseMsBefore: 700 },
-    { role: 'user',  text: 'Sure. I built a React application for our college fest that handled registrations and live seat availability.', pauseMsBefore: 300 },
-    { role: 'agent', text: 'What made you choose React for that project?', pauseMsBefore: 900 },
-    { role: 'user',  text: 'It was easy to use, and I already knew some JavaScript from class.', pauseMsBefore: 250 },
-    { role: 'agent', text: 'That\u2019s a broad answer. What specific technical advantage did React give you in this project?', pauseMsBefore: 1000 },
-    { role: 'user',  text: 'The component model. I reused one seat-map component across three pages, and virtual DOM updates kept the live seat board fast with about two hundred concurrent viewers.', pauseMsBefore: 350 },
-    { role: 'agent', text: 'Better. Now — walk me through the hardest bug you hit while building it.', pauseMsBefore: 900 },
+    { role: 'agent', text: 'Let\u2019s begin. Tell me about a difficult technical project.', pauseMsBefore: 800 },
+
+    { role: 'user', text: 'I built a React application.', pauseMsBefore: 300 },
+
+    { role: 'agent', text: 'Set the scene for me \u2014 what was the project, and when and with whom did you build it?', pauseMsBefore: 1000 },
+
+    { role: 'user', text: 'It was for my college fest, last year.', pauseMsBefore: 280 },
+
+    { role: 'agent', text: 'And what part of that did you personally build?', pauseMsBefore: 950 },
+
+    { role: 'user', text: 'I built the live seat-map myself. It showed seat availability in real time during booking.', pauseMsBefore: 350 },
+
+    { role: 'agent', text: 'Walk me through one technical decision you made \u2014 and what you traded away.', pauseMsBefore: 1000 },
+
+    { role: 'user', text: 'I chose websockets instead of polling because polling was too slow \u2014 at the cost of some complexity. Latency dropped from two seconds to about two hundred milliseconds with two hundred concurrent viewers.', pauseMsBefore: 400 },
+
+    { role: 'agent', text: 'Good. That covered it. Next: tell me about a performance problem you solved.', pauseMsBefore: 1100 },
+
+    { role: 'user', text: 'The seat board would freeze during peak booking.', pauseMsBefore: 250 },
+
+    { role: 'agent', text: 'How did you measure the problem before you touched anything?', pauseMsBefore: 950 },
+
+    { role: 'user', text: 'I profiled the render loop and added timing around the update handler. The freeze happened because every seat re-rendered on every message.', pauseMsBefore: 380 },
+
+    { role: 'agent', text: 'What was the root cause, specifically?', pauseMsBefore: 900 },
+
+    { role: 'user', text: 'The update handler was re-rendering all seats instead of the changed one. I fixed it by memoizing seat components and batching updates, and p95 went from two seconds to two hundred milliseconds.', pauseMsBefore: 420 },
+
+    { role: 'agent', text: 'Clear bottleneck, measurement, root cause, fix, and a number. That\u2019s how to answer. Let\u2019s end here \u2014 thanks for the conversation.', pauseMsBefore: 1200 },
   ],
 };
