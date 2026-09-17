@@ -17,6 +17,11 @@ const HEDGES = [
   'and so on', 'etc', 'i believe', 'basically just', 'just basically',
 ];
 
+const FILLERS = [
+  'like', 'you know', 'um', 'uh', 'erm', 'basically', 'actually',
+  'literally', 'right', 'so yeah', 'kind of', 'sort of', 'i mean',
+];
+
 const TECH_HINTS = [
   'react', 'node', 'python', 'java', 'go ', 'rust', 'sql', 'nosql', 'mongo', 'postgres', 'mysql',
   'redis', 'kafka', 'docker', 'kubernetes', 'k8s', 'aws', 'gcp', 'azure', 'api', 'rest', 'graphql',
@@ -44,6 +49,14 @@ export function analyzeAnswer(rawText) {
   const firstPerson = FIRST_PERSON_RE.test(text);
   const teamHeavy = TEAM_RE.test(text) && !firstPerson;
   const passiveHits = text.match(new RegExp(PASSIVE_RE.source, 'gi')) || [];
+
+  // Day 6 stats: filler-word count (word-boundary match, whole phrase = 1 hit
+  // per occurrence). "like" is only counted as a standalone word.
+  let fillerCount = 0;
+  for (const f of FILLERS) {
+    const re = new RegExp(`\\b${f.replace(/ /g, '\\s+')}\\b`, 'g');
+    fillerCount += (text.match(re) || []).length;
+  }
 
   // --- specificity score 0-10 ---
   let specificity = 0;
@@ -79,6 +92,7 @@ export function analyzeAnswer(rawText) {
     signals: {
       hedgeHits, techHits: techHits.slice(0, 6), hasMetric, hasTimeframe,
       firstPerson, teamHeavy, passiveCount: passiveHits.length,
+      fillerCount, // Day 6: demo stats
     },
     weaknesses,
     category,

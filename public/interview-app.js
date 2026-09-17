@@ -11,7 +11,7 @@ const els = {
   pressureBlocks: $('pressureBlocks'), pLevel: $('pLevel'),
   specBlocks: $('specBlocks'), specNum: $('specNum'), weaknesses: $('weaknesses'),
   rubricBox: $('rubricBox'), rubricList: $('rubricList'), rubricScore: $('rubricScore'),
-  reportBox: $('reportBox'), repScore: $('repScore'), repSub: $('repSub'), repQuestions: $('repQuestions'), repWeak: $('repWeak'), practiceBtn: $('practiceBtn'),
+  reportBox: $('reportBox'), repScore: $('repScore'), repSub: $('repSub'), repQuestions: $('repQuestions'), repWeak: $('repWeak'), repStats: $('repStats'), practiceBtn: $('practiceBtn'),
   startBtn: $('startBtn'), endBtn: $('endBtn'),
   log: $('log'), footNote: $('footNote'),
 };
@@ -102,6 +102,14 @@ function renderReport(rep) {
   if (!rep) return;
   // Day 5 handoff: practice page starts from the report's weakest question.
   try { sessionStorage.setItem('vt:lastReport', JSON.stringify(rep)); } catch {}
+  // Day 6: session stats line — filler words / vague / incomplete.
+  if (rep.stats) {
+    const st = rep.stats;
+    els.repStats.innerHTML =
+      `<span class="stat">${st.fillerWords} filler words</span>` +
+      `<span class="stat">${st.vagueAnswers} vague answers</span>` +
+      `<span class="stat">${st.incompleteAnswers} incomplete answers</span>`;
+  }
   els.reportBox.hidden = false;
   els.repScore.textContent = rep.evidenceScore == null ? '—' : `${rep.evidenceScore}%`;
   els.repSub.textContent = `${rep.totalEarned}/${rep.totalPossible} evidence points · ${rep.questionsAsked} questions`;

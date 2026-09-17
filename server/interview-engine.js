@@ -50,6 +50,7 @@ export class Interview {
       lastRubric: null,        // Day 4: rubric score for the current question
     };
     this.rubricLog = [];       // one entry per answered question (report fuel)
+    this.stats = { fillerWords: 0, vagueAnswers: 0, incompleteAnswers: 0, answers: 0 }; // Day 6 demo stats
     this.questionAskedAt = null;
     this.followUpCount = 0; // follow-ups asked for the current question
   }
@@ -117,6 +118,12 @@ export class Interview {
     for (const w of analysis.weaknesses) {
       if (!this.state.weaknesses.includes(w)) this.state.weaknesses.push(w);
     }
+
+    // Day 6 stats: aggregate per-answer signals for the results screen.
+    this.stats.answers++;
+    this.stats.fillerWords += analysis.signals?.fillerCount ?? 0;
+    if (analysis.weaknesses.includes('hedging') || analysis.specificity <= 4) this.stats.vagueAnswers++;
+    if (analysis.wordCount > 0 && analysis.wordCount < 10) this.stats.incompleteAnswers++;
 
     const missing = rubric.results.filter((r) => !r.earned);
     const allEvidencePresent = rubric.pointsTotal > 0 && missing.length === 0;
@@ -194,6 +201,7 @@ export class Interview {
         ? { id: weakest.id, question: weakest.question, pointsEarned: weakest.pointsEarned, pointsTotal: weakest.pointsTotal, missed: weakest.missed }
         : null,
       weaknesses: [...this.state.weaknesses],
+      stats: { ...this.stats }, // Day 6: fillers / vague / incomplete counts
     };
   }
 

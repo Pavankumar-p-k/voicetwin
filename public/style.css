@@ -288,3 +288,14 @@ a { color: var(--accent); }
   border-radius: 2px;
   transition: height 90ms ease;
 }
+
+/* Day 6 — report stats chips */
+.repstats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.repstats .stat {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--warn);
+  background: rgba(250, 204, 21, 0.06);
+}
