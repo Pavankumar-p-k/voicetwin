@@ -185,3 +185,30 @@ npm run check   # parse-checks every JS file (no network, no side effects)
 > the answer contains the evidence required by the question."
 
 *(that's Day 4 — but the rubrics exist already, written tonight, for free)*
+
+## Demo hardening (Day 7)
+
+Failure-hunt results against a live server — fixes shipped same day:
+
+| Test | Scenario | Result |
+|---|---|---|
+| A | Normal interview | ✅ verified live (Day 1–6 sessions) |
+| B/C | Interruption both directions | ✅ barge-in flushes audio + stale tool results (seen in real session log) |
+| D | Bad Wi-Fi / socket drop | ✅ FIXED — dropped WS no longer bricks Start; mic stops, state clears, press Start to rejoin |
+| E | Technical vocabulary | ✅ "blackbody", "photoelectric effect" transcribed correctly in real session |
+| F | Very long answer (2400 words) | ✅ 4/5 evidence, no hang |
+| G | Silence | ✅ 8s nudge, once, calm |
+| H | Gibberish answer | ✅ pressure 2, spec 0, clean demand — no 500 |
+| I | Browser refresh | ✅ FIXED — idle ghost sessions swept after 30 min; reconnect starts a fresh interview |
+| J | API failure | ✅ bad JSON now 400 (was 500); invalid key surfaces AssemblyAI's message verbatim via 502 |
+
+### Day-of demo runbook
+
+1. `npm run dev` the night before; verify `/` loads and `/api/health` says `keyConfigured: true`.
+2. Screenshot the dashboard balance; note remaining Voice Agent minutes.
+3. One warm-up interview (2 min max), then stop. No feature changes from here.
+4. **Rehearse the fallback switch once**: start an interview, hit `Esc` mid-answer,
+   land on Safe Mode, play the replay. You should be able to do it in under 5 seconds,
+   without narrating panic.
+5. If the live session dies mid-demo: press `Esc`, Safe Mode is already standing by.
+   The judges see the same UI, the same report, the same story.
