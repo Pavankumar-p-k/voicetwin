@@ -3,61 +3,80 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VoiceTwin — Day 1 Voice Console</title>
+  <title>VoiceTwin — the interviewer that fights back</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">VOICE<span>TWIN</span></div>
-    <div class="subtitle">Day 1 · voice reality + latency</div>
+    <div class="subtitle">adaptive voice interviewer</div>
     <nav class="nav">
-      <a href="/">Console</a>
+      <a href="/" class="active">Landing</a>
+      <a href="/console.html">Console</a>
       <a href="/harness.html">Latency harness</a>
+      <a href="/interview.html">Interview</a>
+      <a href="/practice.html">Practice</a>
       <a href="/safe.html">Safe mode</a>
     </nav>
   </header>
 
-  <main class="grid">
-    <section class="panel controls">
-      <div class="statusrow">
-        <span class="dot" id="micDot"></span>
-        <span id="micState">MIC idle</span>
-        <span class="dot agent" id="agentDot"></span>
-        <span id="agentState">AGENT idle</span>
+  <main class="landing">
+    <section class="hero">
+      <div class="hero-kicker">LIVE VOICE · EVIDENCE-BASED · ADAPTIVE</div>
+      <h1>INTERVIEWER THAT<br /><span>FIGHTS BACK</span></h1>
+      <p class="lede">
+        It doesn't just ask questions. It listens, challenges weak answers,
+        interrupts naturally, and adapts the interview in real time —
+        then coaches you with a measurable before → after.
+      </p>
+      <div class="hero-cta">
+        <a class="btn primary" href="/interview.html">Start an interview →</a>
+        <a class="btn ghost" href="/practice.html">Practice a weak spot</a>
       </div>
-
-      <div class="timer" id="timer">0.0s</div>
-      <div class="capnote">session cap <span id="capNote">…</span> · <a href="/api/usage" target="_blank" rel="noopener">usage</a></div>
-
-      <div class="buttons">
-        <button id="startBtn" class="primary">Start session</button>
-        <button id="endBtn" class="danger" disabled>End session</button>
-      </div>
-
-      <label class="chk"><input type="checkbox" id="autorotate" /> auto-advance test label on each reply.done</label>
-
-      <div class="testlabel">
-        Current test: <select id="testSelect"></select>
-      </div>
-
-      <div class="hint">
-        Chrome/Edge recommended. Speak after “session ready”. The agent will greet first —
-        the greeting is not measured. Press <kbd>Esc</kbd> on any page for Demo Safe Mode (Page 4).
+      <div class="hero-note">
+        Chrome / Edge · headphones recommended · the agent talks first
       </div>
     </section>
 
-    <section class="panel transcript">
-      <h2>Transcript</h2>
-      <div id="liveUser" class="liveuser"></div>
-      <div id="log" class="log"></div>
+    <section class="loop">
+      <div class="loop-step"><span>Answer</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><span>AI evaluates</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step hot"><span>AI challenges</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><span>Respond</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><span>Adapts</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><span>Coaching</span></div>
+    </section>
+
+    <section class="feats">
+      <div class="feat">
+        <div class="feat-title">It pushes back</div>
+        <div class="feat-body">"I built a React application." —
+          <i>What changed because of your work? Give me a number.</i></div>
+      </div>
+      <div class="feat">
+        <div class="feat-title">Evidence, not vibes</div>
+        <div class="feat-body">Every answer is scored against a 5-point rubric.
+          No LLM opinion — checkable detectors, one per evidence point.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-title">Coaching that measures</div>
+        <div class="feat-body">Weakest question → targeted practice →
+          <b>BEFORE 2/5 → AFTER 5/5</b>. The improvement is the demo.</div>
+      </div>
+    </section>
+
+    <section class="landing-foot">
+      <a href="/harness.html">Latency harness</a> ·
+      <a href="/safe.html">Demo safe mode</a> ·
+      <a href="https://github.com/Pavankumar-p-k/voicetwin" target="_blank" rel="noopener">Source</a>
     </section>
   </main>
 
-  <footer class="foot">
-    <span>AssemblyAI Voice Agent · 24 kHz PCM16 · temp-token auth</span>
-    <span id="footNote"></span>
-  </footer>
-
-  <script type="module" src="/app.js"></script>
+  <script type="module" src="/landing.js"></script>
 </body>
 </html>
