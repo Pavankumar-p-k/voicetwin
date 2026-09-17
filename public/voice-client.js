@@ -143,6 +143,11 @@ export async function startVoice() {
 
   // 4. Mic -> worklet -> b64 -> input.audio (gated on session.ready)
   audio.workletNode.port.onmessage = (e) => {
+    // Day 6: amplitude level messages ride the same port as PCM buffers.
+    if (e.data && e.data.level != null) {
+      EVT.push('mic.level', { level: e.data.level });
+      return;
+    }
     if (!audio.ready || audio.ws.readyState !== WebSocket.OPEN) return;
     const b64 = bytesToB64(new Uint8Array(e.data));
     audio.ws.send(JSON.stringify({ type: 'input.audio', audio: b64 }));

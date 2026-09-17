@@ -255,3 +255,36 @@ a { color: var(--accent); }
 .feat-body b { color: var(--ok); }
 .landing-foot { text-align: center; color: var(--dim); font-size: 13px; }
 @media (max-width: 720px) { .feats { grid-template-columns: 1fr; } }
+
+/* Day 6 — segmented pressure meter */
+.psegments { display: flex; gap: 3px; flex: 1; }
+.pseg {
+  flex: 1; text-align: center;
+  font-size: 9.5px; letter-spacing: 1px;
+  padding: 4px 2px;
+  border: 1px solid var(--line); border-radius: 6px;
+  color: var(--dim); background: var(--panel);
+  white-space: nowrap; overflow: hidden;
+}
+.pseg.on { color: #0b0e14; font-weight: 800; }
+.psegments.p1 .pseg.on { background: #4ade80; border-color: #4ade80; }
+.psegments.p2 .pseg.on { background: #facc15; border-color: #facc15; }
+.psegments.p3 .pseg.on { background: #fb923c; border-color: #fb923c; }
+.psegments.p4 .pseg.on { background: #f87171; border-color: #f87171; }
+
+/* Day 6 — mic waveform */
+.wavebox { margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+.wavelabel { font-size: 10px; letter-spacing: 1.5px; color: var(--dim); }
+.wave {
+  flex: 1; height: 50px;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0 8px;
+}
+.wave span {
+  width: 4px; height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: height 90ms ease;
+}

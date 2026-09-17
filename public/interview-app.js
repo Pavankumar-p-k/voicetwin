@@ -7,6 +7,7 @@ const els = {
   roleSelect: $('roleSelect'), modeSelect: $('modeSelect'),
   stateDot: $('stateDot'), stateText: $('stateText'),
   questionText: $('questionText'), qMeta: $('qMeta'),
+  pressureSegments: $('pressureSegments'), wave: $('wave'),
   pressureBlocks: $('pressureBlocks'), pLevel: $('pLevel'),
   specBlocks: $('specBlocks'), specNum: $('specNum'), weaknesses: $('weaknesses'),
   rubricBox: $('rubricBox'), rubricList: $('rubricList'), rubricScore: $('rubricScore'),
@@ -25,14 +26,31 @@ function logLine(msg, cls = '') {
   while (els.log.childElementCount > 400) els.log.removeChild(els.log.firstChild);
 }
 
-const BLOCKS = ['░░░░', '█░░░', '██░░', '███░', '████'];
+
+// Day 6: pressure as 4 labeled segments; active level + everything below lights up.
+function renderPressure(level) {
+  els.pressureSegments.className = `psegments p${level}`;
+  els.pressureSegments.querySelectorAll('.pseg').forEach((seg, i) => {
+    seg.classList.toggle('on', i < level);
+  });
+}
+
+// Day 6: mic waveform — the newest level pushes bars right, height = amplitude.
+const WAVE_BARS = 18;
+function renderLevel(level) {
+  const bars = els.wave.children;
+  for (let i = 0; i < bars.length - 1; i++) {
+    bars[i].style.height = bars[i + 1].style.height || '3px';
+  }
+  bars[bars.length - 1].style.height = `${Math.max(3, Math.round(level * 46))}px`;
+}
 
 function renderState() {
   const s = interview.snapshot;
   if (s) {
     els.questionText.textContent = interview.question ? interview.question.text : '—';
     els.qMeta.textContent = `answers ${s.answer_count} · remaining ${s.questionsRemaining}`;
-    els.pressureBlocks.textContent = BLOCKS[Math.min(4, s.pressure_level)];
+    renderPressure(s.pressure_level);
     els.pLevel.textContent = s.pressure_level;
   }
   const listening = audio.ready && !audio.agentSpeaking;
@@ -104,6 +122,8 @@ function renderReport(rep) {
 EVT.on((e) => {
   if (e.type === 'reply.audio') { audio.agentSpeaking = true; renderState(); }
   if (e.type === 'reply.done') { audio.agentSpeaking = false; renderState(); }
+  if (e.type === 'mic.level') renderLevel(e.level); // Day 6 waveform
+  if (e.type === 'interview.pressure') renderPressure(e.level);
   if (e.type === 'interview.analysis') renderAnalysis(e);
   if (e.type === 'interview.rubric') renderRubric(e);   // Day 4: live evidence chips
   if (e.type === 'interview.question') { els.rubricBox.hidden = true; } // fresh question: reset checklist

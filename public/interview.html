@@ -47,9 +47,14 @@
         <div id="qMeta" class="qmeta"></div>
       </div>
 
-      <div class="pressure">
+      <div class="pressure p1">
         <span class="plabel">pressure</span>
-        <span class="pblocks" id="pressureBlocks">░░░░</span>
+        <div class="psegments" id="pressureSegments">
+          <div class="pseg">FRIENDLY</div>
+          <div class="pseg">SPECIFIC</div>
+          <div class="pseg">CHALLENGING</div>
+          <div class="pseg">PRESSURE</div>
+        </div>
         <span id="pLevel" class="pnum">1</span>
       </div>
 
@@ -57,6 +62,15 @@
         <span class="plabel">specificity</span>
         <span class="pblocks spec" id="specBlocks">——————————</span>
         <span id="specNum" class="pnum">—</span>
+      </div>
+
+      <div class="wavebox">
+        <div class="wavelabel">MIC</div>
+        <div class="wave" id="wave" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
       </div>
 
       <div class="weaknesses" id="weaknesses"></div>

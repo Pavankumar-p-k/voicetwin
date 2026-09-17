@@ -16,11 +16,22 @@ class PCMResampleProcessor extends AudioWorkletProcessor {
     this.bufferSize = opts.bufferSize || 480; // ~20ms at 24kHz output
     this.ratio = sampleRate / this.targetRate; // sampleRate = global in worklet scope
     this.acc = new Float32Array(0);
+    this.levelEvery = opts.levelEvery || 4;   // post an amplitude level every N buffers (~80ms)
+    this.levelCounter = 0;
   }
 
   process(inputs) {
     const input = inputs[0] && inputs[0][0];
     if (!input) return true;
+
+    // Day 6: cheap RMS level for the waveform UI — one message per ~80ms.
+    if (++this.levelCounter >= this.levelEvery) {
+      this.levelCounter = 0;
+      let sum = 0;
+      for (let i = 0; i < input.length; i++) sum += input[i] * input[i];
+      const rms = Math.sqrt(sum / input.length);
+      this.port.postMessage({ level: Math.min(1, rms * 4) }); // boost + clamp for display
+    }
 
     // Append incoming frame to accumulator
     const next = new Float32Array(this.acc.length + input.length);
