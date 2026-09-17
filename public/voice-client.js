@@ -70,6 +70,20 @@ export const interview = {
   lastUserText: '',
 };
 
+// ---- practice session (Day 5) ----
+// Parallel to `interview`: keys the server-side Practice engine. Mutually
+// exclusive with interview.active (practice runs on its own page).
+export const practice = {
+  id: null,
+  active: false,
+  question: null,
+  before: null,
+  tools: [],
+  systemPrompt: '',
+  lastUserText: '',
+  lastRubric: null,
+};
+
 // ---- UI logger ----
 export function logLine(msg, cls = '') {
   const el = document.getElementById('log');
@@ -142,6 +156,18 @@ export async function startVoice() {
 
 function inlineSession() {
   // Inline configuration (mutually exclusive with agent_id).
+  // Practice mode uses the coach prompt + practice tools (Day 5).
+  if (practice.active && practice.systemPrompt) {
+    return {
+      system_prompt: practice.systemPrompt,
+      greeting: practice.question ? `Let's practice. ${practice.question.text}` : 'Let’s practice.',
+      output: { voice: CONFIG.AAI.VOICE },
+      input: {
+        turn_detection: { vad_threshold: 0.5, min_silence: 2200, max_silence: 6000, interrupt_response: true },
+      },
+      tools: practice.tools,
+    };
+  }
   // Interview mode uses the server-built persona prompt + tools (Day 2).
   if (interview.active && interview.systemPrompt) {
     return {
@@ -211,6 +237,7 @@ async function onMessage(msg) {
       turn.finalTranscript = msg.text;
       turn.agentText = '';
       interview.lastUserText = msg.text;
+      practice.lastUserText = msg.text;
       logLine(`You: ${msg.text}`);
       // Answer received: retune to baseline (tighten again).
       if (interview.waitingForAnswer) {
@@ -380,6 +407,44 @@ async function handleToolCall(name, args) {
     return JSON.stringify({ ended: true, closing_guidance: 'Close politely in one short sentence.' });
   }
 
+  if (name === 'check_attempt') {
+    // Day 5 coaching loop: score the attempt, speak the demand verbatim.
+    const res = await fetch('/api/practice/answer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practiceId: practice.id, answerText: args.attempt_text || practice.lastUserText || '' }),
+    });
+    if (!res.ok) throw new Error(`practice answer api ${res.status}`);
+    const data = await res.json();
+    practice.lastRubric = data.rubric ?? null;
+    if (data.rubric) EVT.push('practice.rubric', data.rubric);
+    EVT.push('practice.attempt', {
+      attempts: data.attempts,
+      delta: data.delta,
+      done: data.done,
+      specificity: data.analysis?.specificity ?? null,
+    });
+    return JSON.stringify({
+      evidence: data.rubric ? `${data.rubric.pointsEarned}/${data.rubric.pointsTotal} rubric points earned (cumulative)` : null,
+      attempts_remaining: data.attemptsRemaining,
+      done: data.done,
+      next_utterance_guidance: data.done
+        ? data.coaching
+        : `Say exactly: "${data.coaching}" — one sentence, nothing else.`,
+    });
+  }
+
+  if (name === 'end_practice') {
+    practice.active = false;
+    fetch('/api/practice/end', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practiceId: practice.id }),
+    }).then((r) => r.json()).then((d) => {
+      if (d.result) EVT.push('practice.result', d.result);
+    }).catch(() => {});
+    EVT.push('practice.ended.by_agent', {});
+    return JSON.stringify({ ended: true, closing_guidance: 'Close politely in one short sentence and acknowledge the improvement.' });
+  }
+
   throw new Error(`unknown tool: ${name}`);
 }
 
@@ -414,6 +479,38 @@ export function teardownInterview() {
   interview.id = null;
   interview.toolsPending = [];
   interview.waitingForAnswer = false;
+}
+
+// Prepare a practice session BEFORE startVoice() so inlineSession() picks it up.
+export async function setupPractice({ role, questionId, missed, interviewReport, practiceId } = {}) {
+  const res = await fetch('/api/practice/start', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role, questionId, missed, interviewReport, practiceId }),
+  });
+  if (!res.ok) throw new Error(`practice start failed: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  practice.id = data.practiceId;
+  practice.question = data.question;
+  practice.before = data.before;
+  practice.systemPrompt = data.systemPrompt;
+  practice.tools = data.tools;
+  practice.active = true;
+  practice.lastUserText = '';
+  practice.lastRubric = null;
+  EVT.push('practice.setup', { practiceId: practice.id, question: data.question.id });
+  return data;
+}
+
+export function teardownPractice() {
+  if (practice.active && practice.id) {
+    fetch('/api/practice/end', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ practiceId: practice.id }),
+    }).catch(() => {});
+  }
+  practice.active = false;
+  practice.id = null;
+  practice.lastRubric = null;
 }
 
 // ---- teardown (billing-critical: session.end BEFORE close) ----

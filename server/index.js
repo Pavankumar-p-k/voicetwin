@@ -315,6 +315,15 @@ async function handleApi(req, res, url) {
     return sendJSON(res, 200, { samples: latencyStore.all() });
   }
 
+  if (route === 'GET /api/questions') {
+    // Static catalog for client pickers — zero cost, no session needed.
+    const catalog = JSON.parse(readFileSync(path.join(ROOT, 'data', 'questions.json'), 'utf8'));
+    return sendJSON(res, 200, {
+      role: catalog.role,
+      questions: catalog.questions.map((q) => ({ id: q.id, question: q.question })),
+    });
+  }
+
   if (route === 'GET /api/latency/summary') {
     return sendJSON(res, 200, latencyStore.summarize(CONFIG.GATE));
   }

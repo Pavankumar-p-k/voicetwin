@@ -82,6 +82,8 @@ function renderRubric(r) {
 // Day 4: final evidence report (replaces a vibe score).
 function renderReport(rep) {
   if (!rep) return;
+  // Day 5 handoff: practice page starts from the report's weakest question.
+  try { sessionStorage.setItem('vt:lastReport', JSON.stringify(rep)); } catch {}
   els.reportBox.hidden = false;
   els.repScore.textContent = rep.evidenceScore == null ? '—' : `${rep.evidenceScore}%`;
   els.repSub.textContent = `${rep.totalEarned}/${rep.totalPossible} evidence points · ${rep.questionsAsked} questions`;
@@ -208,8 +210,8 @@ function end() {
 els.startBtn.addEventListener('click', start);
 els.endBtn.addEventListener('click', end);
 els.practiceBtn.addEventListener('click', () => {
-  // Day 5 hook: the coaching loop starts from the weakest question.
-  logLine('PRACTICE NOW → Day 5 coaching loop (before → after comparison)', 'sys');
+  // Day 5: the coaching loop starts from the weakest question.
+  window.location.href = '/practice.html';
 });
 window.addEventListener('pagehide', () => { disarmNudge(); teardownInterview(); });
 renderState();

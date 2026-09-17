@@ -205,3 +205,22 @@ a { color: var(--accent); }
 .rqnum { margin-left: auto; color: var(--dim, var(--muted)); }
 .rweakest { border-top: 1px dashed var(--border, var(--line)); padding-top: 8px; font-size: 13px; }
 .rweakest button { margin-top: 8px; }
+
+/* Day 5 — BEFORE → AFTER comparison */
+.beforeafter {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.ba.col { display: flex; flex-direction: column; gap: 2px; }
+.ba.arrow { font-size: 22px; color: var(--dim, var(--muted)); align-self: center; }
+.balabel { font-size: 10px; letter-spacing: 1.5px; color: var(--dim, var(--muted)); }
+.bascore { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+.ba.col.after .bascore { color: var(--ok); }
+.babar { font-family: ui-monospace, Consolas, monospace; letter-spacing: 1px; font-size: 13px; }
+.ba.delta { margin-left: auto; align-self: center; font-size: 20px; font-weight: 800; color: var(--ok); }
