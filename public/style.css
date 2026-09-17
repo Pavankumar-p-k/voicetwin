@@ -222,6 +222,18 @@ select:focus { outline: none; border-color: rgba(201,169,97,0.55); }
 .pnum { color: var(--dim); font-size: 12px; }
 .pblocks.spec { color: var(--ok); letter-spacing: 1px; font-size: 13px; }
 
+/* ---------- session head (v3 command deck) ---------- */
+.sessionhead {
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+.sessionhead .statusrow { margin-bottom: 10px; }
+.sessionhead .timer { margin: 2px 0 6px; }
+.sessionhead .capnote { margin: 0 0 6px; }
+.sessionhead-row { display: flex; gap: 14px; margin-bottom: 12px; }
+.sessionhead-row label { flex: 1; display: flex; flex-direction: column; gap: 5px; color: var(--dim); font-size: 10px; text-transform: uppercase; letter-spacing: 1.8px; }
+
 .weaknesses { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 16px; min-height: 24px; }
 .wtag {
   background: rgba(207, 122, 114, 0.1); color: var(--err);
@@ -350,29 +362,34 @@ a:hover { color: var(--accent-bright); }
 .babar { font-family: var(--mono); letter-spacing: 1.5px; font-size: 13px; }
 .ba.delta { margin-left: auto; align-self: center; font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--ok); }
 
-/* ---------- Day 6 — landing ---------- */
-.landing { max-width: 1020px; margin: 0 auto; padding: 56px 28px 72px; }
-.hero { text-align: center; padding: 34px 0 8px; }
+/* ---------- Day 6 — landing (v3 editorial) ---------- */
+.landing-body { background: radial-gradient(1400px 700px at 50% -12%, rgba(201, 169, 97, 0.07), transparent 60%), var(--bg); }
+.landing { max-width: 1040px; margin: 0 auto; padding: 48px 28px 72px; }
+.hero { text-align: center; padding: 10px 0 8px; }
+.hero-rule {
+  width: 72px; height: 1px; margin: 0 auto 28px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+}
 .hero-kicker {
-  font-size: 11px; letter-spacing: 5px; color: var(--accent);
+  font-size: 11px; letter-spacing: 5.5px; color: var(--accent);
   margin-bottom: 26px; text-transform: uppercase; font-weight: 600;
 }
 .hero h1 {
   font-family: var(--serif);
-  font-size: clamp(46px, 8.5vw, 96px);
-  line-height: 1.02;
+  font-size: clamp(44px, 8vw, 92px);
+  line-height: 1.04;
   margin: 0 0 24px;
   letter-spacing: -1px;
   font-weight: 700;
 }
 .hero h1 span { color: var(--accent); font-style: italic; }
 .lede {
-  max-width: 660px; margin: 0 auto 32px;
-  color: var(--dim); font-size: 17px; line-height: 1.65;
+  max-width: 660px; margin: 0 auto 34px;
+  color: var(--dim); font-size: 17px; line-height: 1.7;
 }
 .hero-cta { display: flex; gap: 14px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
 .btn {
-  padding: 13px 28px; border-radius: 999px;
+  padding: 13px 30px; border-radius: 999px;
   text-decoration: none; font-weight: 600; font-size: 15px;
   letter-spacing: 0.4px;
   transition: transform .08s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
@@ -387,34 +404,82 @@ a:hover { color: var(--accent-bright); }
 .btn.ghost:hover { border-color: rgba(201,169,97,0.5); color: var(--accent-bright); }
 .hero-note { color: var(--dim); font-size: 12.5px; letter-spacing: 0.5px; }
 
-.loop { display: flex; align-items: center; justify-content: center; gap: 9px; flex-wrap: wrap; margin: 52px 0; }
+/* proof numbers strip */
+.proof {
+  display: flex; align-items: center; justify-content: center;
+  gap: 34px; margin: 54px auto 6px; flex-wrap: wrap;
+}
+.proof-item { text-align: center; }
+.proof-num {
+  font-family: var(--serif); font-size: 44px; font-weight: 700;
+  color: var(--accent-bright); line-height: 1;
+}
+.proof-label {
+  margin-top: 8px; font-size: 10.5px; letter-spacing: 2.2px;
+  text-transform: uppercase; color: var(--dim); max-width: 160px;
+}
+.proof-sep { width: 1px; height: 54px; background: var(--hairline); }
+
+/* the loop — numbered steps */
+.loop { margin: 56px 0; }
+.loop-head { display: flex; align-items: center; gap: 18px; margin-bottom: 22px; }
+.loop-title { font-family: var(--serif); font-size: 20px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.loop-line { flex: 1; height: 1px; background: var(--hairline); }
+.loop-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .loop-step {
   border: 1px solid var(--line); border-radius: 999px;
-  padding: 9px 19px; font-size: 13.5px;
+  padding: 8px 16px 8px 13px; font-size: 13.5px;
   background: var(--panel); letter-spacing: 0.3px;
+  display: inline-flex; align-items: baseline; gap: 8px;
+}
+.loop-step i {
+  font-style: normal; font-family: var(--mono); font-size: 10px;
+  color: rgba(201,169,97,0.55);
 }
 .loop-step.hot {
   border-color: rgba(201,169,97,0.6); color: var(--accent-bright);
   font-weight: 700; background: rgba(201,169,97,0.06);
 }
-.loop-arrow { color: rgba(201,169,97,0.5); }
+.loop-step.hot i { color: var(--accent); }
+.loop-arrow { color: rgba(201,169,97,0.45); }
 
-.feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 48px; }
+.feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 52px; }
 .feat {
+  position: relative;
   border: 1px solid var(--line); border-radius: 14px;
-  padding: 22px; background: var(--panel);
+  padding: 24px 22px 20px; background: var(--panel);
   box-shadow: 0 18px 40px -34px rgba(0,0,0,0.8);
 }
-.feat-title {
-  font-family: var(--serif); font-size: 17px; font-weight: 700;
-  margin-bottom: 10px; color: var(--text);
-  padding-bottom: 10px; border-bottom: 1px solid var(--hairline);
+.feat-numeral {
+  position: absolute; top: 14px; right: 18px;
+  font-family: var(--serif); font-size: 30px; font-weight: 700;
+  color: rgba(201,169,97,0.28); line-height: 1;
 }
-.feat-body { color: var(--dim); font-size: 13.5px; line-height: 1.65; }
+.feat-title {
+  font-family: var(--serif); font-size: 18px; font-weight: 700;
+  margin: 0 0 12px; color: var(--text);
+  padding-bottom: 12px; border-bottom: 1px solid var(--hairline);
+  padding-right: 44px;
+}
+.feat-body { color: var(--dim); font-size: 13.5px; line-height: 1.7; margin: 0; }
 .feat-body i { color: var(--warn); font-style: italic; font-family: var(--serif); }
 .feat-body b { color: var(--ok); }
-.landing-foot { text-align: center; color: var(--dim); font-size: 13px; letter-spacing: 0.4px; }
-@media (max-width: 720px) { .feats { grid-template-columns: 1fr; } }
+.landing-foot { text-align: center; margin-top: 8px; }
+.landing-quote {
+  display: block;
+  font-family: var(--serif); font-style: italic;
+  font-size: 16.5px; line-height: 1.7; color: var(--dim);
+  max-width: 640px; margin: 0 auto 26px;
+  padding-top: 26px;
+}
+.landing-quote::before {
+  content: '';
+  display: block; width: 48px; height: 1px;
+  margin: 0 auto 22px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+}
+.landing-links { display: flex; justify-content: center; gap: 22px; font-size: 13px; }
+@media (max-width: 720px) { .feats { grid-template-columns: 1fr; } .proof { gap: 22px; } }
 
 /* ---------- Day 6 — segmented pressure meter ---------- */
 .psegments { display: flex; gap: 4px; flex: 1; }

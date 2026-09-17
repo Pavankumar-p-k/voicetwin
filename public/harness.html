@@ -3,25 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VoiceTwin — Day 1 Latency Harness</title>
+  <title>VoiceTwin — Latency Harness</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">VOICE<span>TWIN</span></div>
-    <div class="subtitle">Day 1 · latency harness · T3 − T0 is the metric</div>
+    <div class="subtitle">latency harness · T3 − T0 is the metric</div>
     <nav class="nav">
-      <a href="/">Console</a>
+      <a href="/">Landing</a>
+      <a href="/console.html">Console</a>
       <a href="/harness.html" class="active">Latency harness</a>
+      <a href="/interview.html">Interview</a>
+      <a href="/practice.html">Practice</a>
       <a href="/safe.html">Safe mode</a>
     </nav>
   </header>
 
   <main class="grid wide">
     <section class="panel controls">
-      <div class="statusrow">
-        <span class="dot" id="micDot"></span><span id="micState">MIC idle</span>
-        <span class="dot agent" id="agentDot"></span><span id="agentState">AGENT idle</span>
+      <div class="sessionhead">
+        <div class="statusrow">
+          <span class="dot" id="micDot"></span><span id="micState">MIC idle</span>
+          <span class="dot agent" id="agentDot"></span><span id="agentState">AGENT idle</span>
+        </div>
       </div>
 
       <div class="testlabel">Current test:
@@ -37,33 +42,33 @@
       <div class="hint">
         Protocol: with a session live, do the current test out loud, then press
         <kbd>Space</kbd> to record the run. For <b>silence</b>: wait 8s, press Space.
-        For <b>interruption</b>: start the agent talking, barge in mid-sentence — the run records as
-        <i>interrupted</i> (excluded from the gate). One voice turn = one run. Timer turns red near the cap;
-        the session self-ends at the cap.
+        For <b>interruption</b>: barge in mid-sentence — the run records as
+        <i>interrupted</i> and is excluded from the gate. One voice turn = one run.
+        The session self-ends at the cap.
       </div>
 
-      <div class="hint" style="margin-top:8px">
+      <div class="hint">
         Gate: median <b>T3 − T0</b> over ≥5 clean runs ·
         <span class="oktext">GREEN ≤ 1500 ms</span> ·
         <span class="warntext">YELLOW ≤ 2500 ms</span> ·
         <span class="errtext">RED &gt; 2500 ms</span>
       </div>
 
-      <div class="buttons" style="margin-top:12px">
+      <div class="buttons" style="margin-top:14px">
         <button id="exportBtn" class="small">Copy CSV</button>
         <a class="small btnlink" href="/api/latency" target="_blank" rel="noopener">raw JSON</a>
         <a class="small btnlink" href="/data/latency-samples.csv" target="_blank" rel="noopener">csv file</a>
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel transcript">
       <h2>Decision gate</h2>
       <div class="gatebox" id="gatebox">
         <div class="verdict" id="verdict">—</div>
         <div class="note" id="gateNote">Record at least 5 clean runs (non-silence, non-interruption).</div>
       </div>
 
-      <h2>Runs (this browser session)</h2>
+      <h2>Runs — this browser session</h2>
       <div class="tablewrap">
         <table class="runs" id="runsTable">
           <thead>
@@ -72,6 +77,9 @@
           <tbody id="runsBody"></tbody>
         </table>
       </div>
+
+      <h2>Event log</h2>
+      <div id="log" class="log"></div>
     </section>
   </main>
 

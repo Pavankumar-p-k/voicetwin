@@ -9,9 +9,10 @@
 <body>
   <header class="topbar">
     <div class="brand">VOICE<span>TWIN</span></div>
-    <div class="subtitle">Day 5 · coaching loop</div>
+    <div class="subtitle">targeted practice</div>
     <nav class="nav">
-      <a href="/">Console</a>
+      <a href="/">Landing</a>
+      <a href="/console.html">Console</a>
       <a href="/harness.html">Latency harness</a>
       <a href="/interview.html">Interview</a>
       <a href="/practice.html" class="active">Practice</a>
@@ -21,19 +22,18 @@
 
   <main class="grid">
     <section class="panel controls">
-      <h2>Targeted Practice</h2>
-
-      <div class="cfgrow">
-        <label>Practice question
-          <select id="questionSelect">
-            <option value="">— weakest from last report —</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="statusrow big">
-        <span class="dot agent" id="stateDot"></span>
-        <span id="stateText" class="statetext">IDLE</span>
+      <div class="sessionhead">
+        <div class="cfgrow" style="margin-bottom:0">
+          <label style="flex:1">Practice question
+            <select id="questionSelect">
+              <option value="">— weakest from last report —</option>
+            </select>
+          </label>
+        </div>
+        <div class="statusrow big">
+          <span class="dot agent" id="stateDot"></span>
+          <span id="stateText" class="statetext">IDLE</span>
+        </div>
       </div>
 
       <div class="qbox">
@@ -44,13 +44,13 @@
 
       <div class="beforeafter" id="beforeAfter" hidden>
         <div class="ba col before">
-          <div class="balabel">BEFORE</div>
+          <div class="balabel">Before</div>
           <div class="bascore" id="baBefore">—</div>
           <div class="babar" id="baBarBefore"></div>
         </div>
         <div class="ba arrow">→</div>
         <div class="ba col after">
-          <div class="balabel">AFTER</div>
+          <div class="balabel">After</div>
           <div class="bascore" id="baAfter">—</div>
           <div class="babar" id="baBarAfter"></div>
         </div>
@@ -58,7 +58,7 @@
       </div>
 
       <div class="rubricbox" id="rubricBox" hidden>
-        <div class="rlabel">EVIDENCE CHECK</div>
+        <div class="rlabel">Evidence check</div>
         <div id="rubricList" class="rlist"></div>
         <div class="rscore"><span id="rubricScore">0/5</span> evidence points · cumulative across attempts</div>
       </div>
@@ -70,7 +70,7 @@
 
       <div class="hint">
         The coach re-asks your weakest interview question and demands the missing
-        evidence — up to 3 attempts. Evidence earned in any attempt is kept.
+        evidence — up to three attempts. Evidence earned in any attempt is kept.
         <kbd>Esc</kbd> jumps to Demo Safe Mode.
       </div>
     </section>

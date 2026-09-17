@@ -22,15 +22,16 @@
 
   <main class="grid">
     <section class="panel controls">
-      <div class="statusrow">
-        <span class="dot" id="micDot"></span>
-        <span id="micState">MIC idle</span>
-        <span class="dot agent" id="agentDot"></span>
-        <span id="agentState">AGENT idle</span>
+      <div class="sessionhead">
+        <div class="statusrow">
+          <span class="dot" id="micDot"></span>
+          <span id="micState">MIC idle</span>
+          <span class="dot agent" id="agentDot"></span>
+          <span id="agentState">AGENT idle</span>
+        </div>
+        <div class="timer" id="timer">0.0s</div>
+        <div class="capnote">session cap <span id="capNote">…</span> · <a href="/api/usage" target="_blank" rel="noopener">usage</a></div>
       </div>
-
-      <div class="timer" id="timer">0.0s</div>
-      <div class="capnote">session cap <span id="capNote">…</span> · <a href="/api/usage" target="_blank" rel="noopener">usage</a></div>
 
       <div class="buttons">
         <button id="startBtn" class="primary">Start session</button>
@@ -44,8 +45,8 @@
       </div>
 
       <div class="hint">
-        Chrome/Edge recommended. Speak after “session ready”. The agent will greet first —
-        the greeting is not measured. Press <kbd>Esc</kbd> on any page for Demo Safe Mode (Page 4).
+        Chrome or Edge recommended. Speak after "session ready" — the greeting is not measured.
+        Press <kbd>Esc</kbd> on any page for Demo Safe Mode.
       </div>
     </section>
 

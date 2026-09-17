@@ -6,7 +6,7 @@
   <title>VoiceTwin — the interviewer that fights back</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body>
+<body class="landing-body">
   <header class="topbar">
     <div class="brand">VOICE<span>TWIN</span></div>
     <div class="subtitle">adaptive voice interviewer</div>
@@ -22,58 +22,90 @@
 
   <main class="landing">
     <section class="hero">
-      <div class="hero-kicker">LIVE VOICE · EVIDENCE-BASED · ADAPTIVE</div>
-      <h1>INTERVIEWER THAT<br /><span>FIGHTS BACK</span></h1>
+      <div class="hero-rule" aria-hidden="true"></div>
+      <div class="hero-kicker">Live voice · Evidence-based · Adaptive</div>
+      <h1>THE INTERVIEWER<br />THAT <span>FIGHTS BACK</span></h1>
       <p class="lede">
-        It doesn't just ask questions. It listens, challenges weak answers,
-        interrupts naturally, and adapts the interview in real time —
-        then coaches you with a measurable before → after.
+        It does not ask its next question. It listens to yours, challenges the weak
+        parts, interrupts naturally, and adapts in real time — then coaches you
+        with an improvement you can verify.
       </p>
       <div class="hero-cta">
-        <a class="btn primary" href="/interview.html">Start an interview →</a>
+        <a class="btn primary" href="/interview.html">Begin the interview</a>
         <a class="btn ghost" href="/practice.html">Practice a weak spot</a>
       </div>
-      <div class="hero-note">
-        Chrome / Edge · headphones recommended · the agent talks first
+      <div class="hero-note">Chrome or Edge · headphones recommended · the interviewer speaks first</div>
+    </section>
+
+    <section class="proof">
+      <div class="proof-item">
+        <div class="proof-num">8</div>
+        <div class="proof-label">curated questions</div>
+      </div>
+      <div class="proof-sep" aria-hidden="true"></div>
+      <div class="proof-item">
+        <div class="proof-num">5</div>
+        <div class="proof-label">evidence points per answer</div>
+      </div>
+      <div class="proof-sep" aria-hidden="true"></div>
+      <div class="proof-item">
+        <div class="proof-num">0</div>
+        <div class="proof-label">LLM judgments in scoring</div>
       </div>
     </section>
 
     <section class="loop">
-      <div class="loop-step"><span>Answer</span></div>
-      <div class="loop-arrow">→</div>
-      <div class="loop-step"><span>AI evaluates</span></div>
-      <div class="loop-arrow">→</div>
-      <div class="loop-step hot"><span>AI challenges</span></div>
-      <div class="loop-arrow">→</div>
-      <div class="loop-step"><span>Respond</span></div>
-      <div class="loop-arrow">→</div>
-      <div class="loop-step"><span>Adapts</span></div>
-      <div class="loop-arrow">→</div>
-      <div class="loop-step"><span>Coaching</span></div>
+      <div class="loop-head">
+        <span class="loop-title">The loop</span>
+        <span class="loop-line" aria-hidden="true"></span>
+      </div>
+      <div class="loop-steps">
+        <div class="loop-step"><i>01</i><span>Answer</span></div>
+        <div class="loop-arrow">→</div>
+        <div class="loop-step"><i>02</i><span>Evaluated</span></div>
+        <div class="loop-arrow">→</div>
+        <div class="loop-step hot"><i>03</i><span>Challenged</span></div>
+        <div class="loop-arrow">→</div>
+        <div class="loop-step"><i>04</i><span>Respond</span></div>
+        <div class="loop-arrow">→</div>
+        <div class="loop-step"><i>05</i><span>Adapted</span></div>
+        <div class="loop-arrow">→</div>
+        <div class="loop-step"><i>06</i><span>Coached</span></div>
+      </div>
     </section>
 
     <section class="feats">
-      <div class="feat">
-        <div class="feat-title">It pushes back</div>
-        <div class="feat-body">"I built a React application." —
-          <i>What changed because of your work? Give me a number.</i></div>
-      </div>
-      <div class="feat">
-        <div class="feat-title">Evidence, not vibes</div>
-        <div class="feat-body">Every answer is scored against a 5-point rubric.
-          No LLM opinion — checkable detectors, one per evidence point.</div>
-      </div>
-      <div class="feat">
-        <div class="feat-title">Coaching that measures</div>
-        <div class="feat-body">Weakest question → targeted practice →
-          <b>BEFORE 2/5 → AFTER 5/5</b>. The improvement is the demo.</div>
-      </div>
+      <article class="feat">
+        <div class="feat-numeral">I</div>
+        <h3 class="feat-title">It pushes back</h3>
+        <p class="feat-body">"I built a React application."
+          <i>"What part of that did you personally build? Give me a number."</i>
+          Vague answers raise the pressure; evidence calms it.</p>
+      </article>
+      <article class="feat">
+        <div class="feat-numeral">II</div>
+        <h3 class="feat-title">Evidence, not vibes</h3>
+        <p class="feat-body">Every answer is scored against a pre-written five-point
+          rubric by inspectable detectors — <b>no LLM opinion anywhere in the score</b>.
+          Every checkmark is defensible.</p>
+      </article>
+      <article class="feat">
+        <div class="feat-numeral">III</div>
+        <h3 class="feat-title">Coaching that measures</h3>
+        <p class="feat-body">Weakest question → targeted practice →
+          <b>before 2/5 → after 5/5</b>. The deliverable is not a score.
+          It is the delta.</p>
+      </article>
     </section>
 
     <section class="landing-foot">
-      <a href="/harness.html">Latency harness</a> ·
-      <a href="/safe.html">Demo safe mode</a> ·
-      <a href="https://github.com/Pavankumar-p-k/voicetwin" target="_blank" rel="noopener">Source</a>
+      <span class="landing-quote">"We are not asking a model whether the answer sounds impressive.
+      We are checking whether the evidence the question requires is actually there."</span>
+      <nav class="landing-links">
+        <a href="/harness.html">Latency harness</a>
+        <a href="/safe.html">Demo safe mode</a>
+        <a href="https://github.com/Pavankumar-p-k/voicetwin" target="_blank" rel="noopener">Source</a>
+      </nav>
     </section>
   </main>
 
