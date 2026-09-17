@@ -117,6 +117,19 @@ BEFORE      →  AFTER
 - `PRACTICE NOW` on the interview report carries the report via `sessionStorage`
   and starts practice on the weakest question automatically.
 
+## Demo polish (Day 6)
+
+- **Landing page** (`/`) — "INTERVIEWER THAT FIGHTS BACK", the demo loop, and the
+  three judge-facing claims with real examples. The Day 1 voice console lives at
+  `/console.html`; the full page set: landing · console · harness · interview ·
+  practice · safe mode. `Esc` jumps to Safe Mode from any page.
+- **Mic waveform** on the interview screen — 18 bars driven by RMS levels from the
+  AudioWorklet (~80ms cadence, same port as the PCM stream, no extra audio nodes).
+- **Pressure meter** — four labeled segments (FRIENDLY → SPECIFIC → CHALLENGING →
+  PRESSURE), colored green → red as the level climbs.
+- **Results stats** — the evidence report now also shows filler-word, vague-answer,
+  and incomplete-answer counts, aggregated from the same deterministic signals.
+
 ## The Day 1 test protocol
 
 With a session live on `/harness.html`, run each scenario out loud, press **Space** after
