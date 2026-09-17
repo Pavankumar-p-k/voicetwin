@@ -92,6 +92,31 @@ browser                    our server                 AssemblyAI
   evidence %, per-question X/5, weakest question + its missed points — the UI's
   INTERVIEW COMPLETE panel and PRACTICE NOW button (Day 5's before/after loop) run off it.
 
+## The coaching loop (Day 5)
+
+```
+INTERVIEW  →  FIND WEAKEST AREA  →  TARGETED PRACTICE  →  REPEAT QUESTION  →  COMPARE
+                                     (report.weakest)     same 5-point rubric   BEFORE → AFTER
+```
+
+- **`server/practice-engine.js`** — `POST /api/practice/start` seeds BEFORE from the
+  Day 4 report's weakest question (its missed points become the target list).
+- The coach re-asks the SAME question over voice and scores each attempt with the
+  SAME deterministic rubric scorer — up to 3 attempts.
+- Evidence is **cumulative across attempts**: a point earned in any attempt stays
+  earned, so a question is never re-demanded after it was answered.
+- The agent speaks each missing-evidence demand verbatim (`check_attempt` tool),
+  and `end_practice` returns the measurable: **before X/5 → after Y/5 (Δ)**.
+- The `/practice.html` panel shows it exactly as the pitch promises:
+
+```
+BEFORE      →  AFTER
+██░░░  2/5     █████  5/5      ↑ +3
+```
+
+- `PRACTICE NOW` on the interview report carries the report via `sessionStorage`
+  and starts practice on the weakest question automatically.
+
 ## The Day 1 test protocol
 
 With a session live on `/harness.html`, run each scenario out loud, press **Space** after
