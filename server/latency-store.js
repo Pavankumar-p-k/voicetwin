@@ -10,7 +10,7 @@ import { appendFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const DATA_DIR = path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), 'data');
+const DATA_DIR = process.env.VERCEL ? '/tmp/voicetwin-data' : path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), 'data');
 
 const REQUIRED = ['T0', 'T1', 'T2', 'T3'];
 
