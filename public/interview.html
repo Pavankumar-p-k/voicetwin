@@ -6,116 +6,104 @@
   <title>VoiceTwin — Interview</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body>
+<body class="screen-chat">
   <header class="topbar">
+    <button id="backBtn" class="small back-btn" aria-label="Back">← Back</button>
     <div class="brand">VOICE<span>TWIN</span></div>
-    <div class="subtitle">adaptive interview</div>
-    <nav class="nav">
-      <a href="/">Landing</a>
-      <a href="/console.html">Console</a>
-      <a href="/harness.html">Latency harness</a>
-      <a href="/interview.html" class="active">Interview</a>
-      <a href="/practice.html">Practice</a>
-      <a href="/safe.html">Safe mode</a>
-    </nav>
+    <div class="live-pill"><span class="pulse"></span><span class="dot agent" id="stateDot" style="display:none"></span><span id="stateText">Ready</span></div>
   </header>
 
-  <main class="grid">
-    <section class="panel controls">
-      <div class="sessionhead">
-        <div class="sessionhead-row">
-          <label>Role
-            <select id="roleSelect">
-              <option>Software Engineer</option>
-            </select>
-          </label>
-          <label>Mode
-            <select id="modeSelect">
-              <option value="normal">Normal</option>
-              <option value="pressure">Pressure</option>
-            </select>
-          </label>
-        </div>
-        <div class="statusrow big">
-          <span class="dot agent" id="stateDot"></span>
-          <span id="stateText" class="statetext">IDLE</span>
-        </div>
+  <!-- Leave confirmation (only while an interview is active) -->
+  <div class="confirm-overlay" id="leaveConfirm" hidden>
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="leaveTitle">
+      <h2 id="leaveTitle">Leave interview?</h2>
+      <p>Your current interview will be ended.</p>
+      <div class="confirm-actions">
+        <button id="stayBtn" class="primary small">Stay</button>
+        <button id="leaveBtn" class="small">Leave</button>
       </div>
+    </div>
+  </div>
 
-      <div class="qbox">
-        <div class="qlabel">Current question</div>
-        <div id="questionText" class="qtext">—</div>
-        <div id="qMeta" class="qmeta"></div>
+  <!-- Screen 2: conversation -->
+  <div class="chat-wrap">
+    <main class="chat-main" id="chatMain">
+      <div class="chat-empty" id="chatEmpty">
+        <div class="t1">Ready when you are.</div>
+        <div class="t2">Press Start below. The interviewer speaks first — just answer out loud.</div>
       </div>
-
-      <div class="pressure p1">
-        <span class="plabel">Pressure</span>
-        <div class="psegments" id="pressureSegments">
-          <div class="pseg">FRIENDLY</div>
-          <div class="pseg">SPECIFIC</div>
-          <div class="pseg">CHALLENGING</div>
-          <div class="pseg">PRESSURE</div>
-        </div>
-        <span id="pLevel" class="pnum">1</span>
-      </div>
-
-      <div class="pressure">
-        <span class="plabel">Specificity</span>
-        <span class="pblocks spec" id="specBlocks">——————————</span>
-        <span id="specNum" class="pnum">—</span>
-      </div>
-
-      <div class="weaknesses" id="weaknesses"></div>
-
-      <div class="wavebox">
-        <div class="wavelabel">Mic</div>
-        <div class="wave" id="wave" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <div class="rubricbox" id="rubricBox" hidden>
-        <div class="rlabel">Evidence check</div>
-        <div id="rubricList" class="rlist"></div>
-        <div class="rscore"><span id="rubricScore">0/5</span> evidence points</div>
-      </div>
-
-      <div class="reportbox" id="reportBox" hidden>
-        <div class="rlabel">Interview complete — evidence report</div>
-        <div class="rheadline"><span id="repScore">—</span><span id="repSub" class="rsub"></span></div>
-        <div id="repQuestions" class="rquestions"></div>
-        <div id="repStats" class="repstats"></div>
-        <div class="rweakest">
-          <div class="rlabel2">Primary weakness</div>
-          <div id="repWeak"></div>
-          <button id="practiceBtn" class="primary small">Practice now</button>
-        </div>
-      </div>
-
-      <div class="buttons">
-        <button id="startBtn" class="primary">Start interview</button>
-        <button id="endBtn" class="danger" disabled>End interview</button>
-      </div>
-
-      <div class="hint">
-        Eight questions. Vague answers raise the pressure; specific ones calm it.
-        Interruptions are welcome — that is the point. <kbd>Esc</kbd> jumps to Demo Safe Mode.
-      </div>
-    </section>
-
-    <section class="panel transcript">
-      <h2>Transcript</h2>
+      <div class="proj-chip" id="projChip" hidden></div>
       <div id="log" class="log"></div>
-    </section>
+    </main>
+
+    <div class="voice-status" id="voiceState">Press Start to begin.</div>
+
+    <div class="score-strip" id="liveScore" hidden>
+      <div class="score-strip-inner">
+        <span class="live-score">Live</span>
+        <span class="m">Specificity <b id="lsSpec">—</b></span>
+        <span class="m">Evidence <b id="lsEvidence">—</b></span>
+        <span class="note" id="lsNote"></span>
+      </div>
+    </div>
+
+    <footer class="composer">
+      <div class="composer-inner">
+        <button id="startBtn" class="primary">Start interview →</button>
+        <button id="endBtn" class="danger" disabled>End</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Screen 3: results -->
+  <main class="results-screen" id="resultsScreen">
+    <h1>Interview complete</h1>
+    <div class="overall" id="resScore">—</div>
+    <div class="overall-sub" id="resSub"></div>
+    <div class="dim-list">
+      <div class="dim-row"><span class="n">Specificity</span><span class="v"><b id="dimSpec">—</b> / 10 avg</span></div>
+      <div class="dim-row"><span class="n">Evidence</span><span class="v"><b id="dimEvidence">—</b></span></div>
+    </div>
+    <h2>What you did well</h2>
+    <ul class="verify-list good" id="wellList"></ul>
+    <h2>What to improve</h2>
+    <ul class="verify-list fix" id="fixList"></ul>
+    <h2>Focus on next time</h2>
+    <ul class="verify-list fix" id="focusList"></ul>
+    <div class="results-actions">
+      <button id="practiceBtn" class="primary small">Practice again</button>
+      <a class="btn small" href="/" id="newInterviewLink">New interview</a>
+    </div>
   </main>
 
-  <footer class="foot">
+  <!-- Preserved working state (hidden from the conversation UI, still driven by JS) -->
+  <div hidden>
+    <select id="roleSelect"><option>Software Engineer</option></select>
+    <select id="modeSelect"><option value="normal">Normal</option><option value="pressure">Pressure</option></select>
+    <div id="questionText">—</div>
+    <div id="qMeta"></div>
+    <div class="psegments" id="pressureSegments"><div class="pseg">F</div><div class="pseg">S</div><div class="pseg">C</div><div class="pseg">P</div></div>
+    <span id="pLevel">1</span>
+    <span id="specBlocks"></span>
+    <span id="specNum">—</span>
+    <div id="weaknesses"></div>
+    <div id="wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div id="rubricBox" hidden><div id="rubricList"></div><span id="rubricScore">0/5</span></div>
+    <div id="reportBox" hidden>
+      <span id="repScore">—</span><span id="repSub"></span>
+      <div id="repQuestions"></div><div id="repStats"></div><div id="repWeak"></div>
+    </div>
     <span id="footNote"></span>
-    <span>tools: next_question · check_answer · end_interview</span>
-  </footer>
+  </div>
 
   <script type="module" src="/interview-app.js"></script>
+  <script type="module">
+    // Chat niceties only — zero logic changes.
+    const log = document.getElementById('log');
+    const empty = document.getElementById('chatEmpty');
+    new MutationObserver(() => {
+      if (log.childElementCount) empty.style.display = 'none';
+    }).observe(log, { childList: true });
+  </script>
 </body>
 </html>

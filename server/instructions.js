@@ -18,12 +18,23 @@ const PRESSURE_PREFIX = {
 // Generates the system prompt for the current interview moment.
 // Day 4: the rubric travels with the prompt — the agent knows exactly what
 // evidence the question demands, and check_answer tool results reference it.
-export function buildSystemPrompt({ questionText, pressureLevel, answerCount, mode, rubric }) {
+// Project-aware mode: `project` carries Screen 1's description + extracted
+// tech — every question must be about THIS project, never a generic bank.
+export function buildSystemPrompt({ questionText, pressureLevel, answerCount, mode, rubric, project = null, briefText = '' }) {
   const parts = [
     BASE_PERSONA,
     `Interview mode: ${mode}. This is question ${answerCount + 1}.`,
     `The CURRENT question is: "${questionText}"`,
   ];
+  if (project && (project.description || (project.tech && project.tech.length))) {
+    const techLine = project.tech && project.tech.length
+      ? `The candidate's stack includes: ${project.tech.join(', ')}.` : '';
+    parts.push(
+      `PROJECT CONTEXT — the candidate built this: "${project.description}". ${techLine} ` +
+        'Every question you ask must be about THIS project: its decisions, tradeoffs, ' +
+        'implementation, failures, and claims. Never ask generic interview questions.',
+    );
+  }
   if (Array.isArray(rubric) && rubric.length > 0) {
     parts.push(
       'The answer must contain this evidence: ' +
@@ -31,10 +42,24 @@ export function buildSystemPrompt({ questionText, pressureLevel, answerCount, mo
       'When check_answer reports missing evidence, your next utterance must be exactly the demand line it gives you — verbatim, one sentence.',
     );
   }
+  if (briefText) {
+    parts.push(
+      'Deeper project understanding (analyzed once — unknowns are marked, never assert them):\n' + briefText,
+    );
+  }
+  // Pressure always comes from the questions themselves.
+  const DIFFICULTY = {
+    simple: 'Difficulty SIMPLE (5 questions): ask understandable questions about what the project does and why choices were made. Explain simply. Do not aggressively challenge every answer; one gentle follow-up per answer is enough.',
+    medium: 'Difficulty MEDIUM (5 questions): ask why/how/tradeoff questions about implementation and decisions. When an answer is vague, ask for a concrete example.',
+    hard: 'Difficulty HARD (5 questions): challenge claims and probe deeply — demand numbers, tradeoffs, failure cases, and scalability reasoning. When an answer is strong, go deeper instead of moving to basics. When an answer is weak, ask for clarification, evidence, and what they personally implemented.',
+  };
+  parts.push(DIFFICULTY[mode] || DIFFICULTY.medium);
   parts.push(
-    'Rules: Ask only the current question, then wait. If the candidate gives a short or vague answer, ' +
-      'use the check_answer tool to decide pressure. To move on, call next_question. ' +
-      'Do not invent new questions. Do not answer for the candidate. Keep every utterance to one sentence.',
+    'TOOL DISCIPLINE — mandatory, no exceptions: after EVERY candidate utterance you MUST call check_answer with their exact words before speaking again. ' +
+      'Never answer from memory and never re-ask the current question yourself. ' +
+      'When a tool result tells you to call next_question, call it immediately — do not speak first. ' +
+      'To move on, call next_question. ' +
+      'Do not invent new questions. Do not answer for the candidate. Do not repeat the greeting. Keep every utterance to one sentence.',
     `Pressure guidance: ${PRESSURE_PREFIX[pressureLevel] || PRESSURE_PREFIX[1]}`,
   );
   return parts.join(' ');

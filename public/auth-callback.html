@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceTwin — Signing in…</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="screen-center">
+    <div class="screen1-card" style="text-align:center">
+      <div class="brand-center">VOICE<span>TWIN</span></div>
+      <p class="sub" id="cbMsg">Finishing sign-in…</p>
+    </div>
+  </main>
+  <script type="module">
+    import { handleAuthCallback } from '/auth.js';
+    handleAuthCallback()
+      .then(() => { window.location.href = '/'; })
+      .catch((e) => { document.getElementById('cbMsg').textContent = e.message || 'Sign-in failed.'; });
+  </script>
+</body>
+</html>

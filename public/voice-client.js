@@ -5,6 +5,7 @@
 // harness page can measure T0..T3 without touching this file.
 
 import { CONFIG } from '/config.js'; // shared root config, served by the server
+import { api } from './auth.js'; // adds Authorization when logged in (server derives user_id)
 
 // ---- shared instrumentation bus (Page 3 reads this) ----
 export const EVT = {
@@ -96,7 +97,11 @@ export function logLine(msg, cls = '') {
   const div = document.createElement('div');
   div.className = `line ${cls}`.trim();
   const t = ((performance.now() - performanceOrigin()) / 1000).toFixed(2);
-  div.textContent = `[${String(t).padStart(7)}s] ${msg}`;
+  const ts = document.createElement('span');
+  ts.className = 't';
+  ts.textContent = `[${String(t).padStart(7)}s] `;
+  div.appendChild(ts);
+  div.appendChild(document.createTextNode(msg));
   el.appendChild(div);
   el.scrollTop = el.scrollHeight;
   // cap log lines so the DOM never balloons during long test batches
@@ -110,7 +115,7 @@ export async function startVoice() {
   audio.sending = false;
 
   // 1. Temporary token from OUR server (API key never reaches the browser)
-  const tokenRes = await fetch('/api/voice-token');
+  const tokenRes = await api('/api/voice-token');
   if (!tokenRes.ok) throw new Error(`voice-token failed: ${tokenRes.status} ${await tokenRes.text()}`);
   const { token, maxSessionSeconds } = await tokenRes.json();
 
@@ -210,7 +215,7 @@ export async function setTurnDetection(td) {
 }
 export const TD_BASELINE = { vad_threshold: 0.5, min_silence: 1200, max_silence: 3000, interrupt_response: true };
 // Echo-safe preset: higher VAD threshold keeps speaker bleed from arming turns.
-export const TD_LOOSE = { vad_threshold: 0.45, min_silence: 2200, max_silence: 6000, interrupt_response: true };
+export const TD_LOOSE = { vad_threshold: 0.45, min_silence: 1500, max_silence: 6000, interrupt_response: true };
 
 // ---- message handling + timestamps ----
 async function onMessage(msg) {
@@ -373,7 +378,7 @@ function playChunk(b64) {
 // ---- Day 2: interview tool dispatch (client-side function tools) ----
 async function handleToolCall(name, args) {
   if (name === 'check_answer') {
-    const res = await fetch('/api/interview/answer', {
+    const res = await api('/api/interview/answer', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interviewId: interview.id, answerText: args.answer_text || interview.lastUserText || '' }),
     });
@@ -403,7 +408,7 @@ async function handleToolCall(name, args) {
   }
 
   if (name === 'next_question') {
-    const res = await fetch('/api/interview/next', {
+    const res = await api('/api/interview/next', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interviewId: interview.id }),
     });
@@ -425,7 +430,7 @@ async function handleToolCall(name, args) {
 
   if (name === 'end_interview') {
     interview.active = false;
-    fetch('/api/interview/end', {
+    api('/api/interview/end', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interviewId: interview.id }),
     }).then((r) => r.json()).then((d) => {
@@ -437,7 +442,7 @@ async function handleToolCall(name, args) {
 
   if (name === 'check_attempt') {
     // Day 5 coaching loop: score the attempt, speak the demand verbatim.
-    const res = await fetch('/api/practice/answer', {
+    const res = await api('/api/practice/answer', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ practiceId: practice.id, answerText: args.attempt_text || practice.lastUserText || '' }),
     });
@@ -463,7 +468,7 @@ async function handleToolCall(name, args) {
 
   if (name === 'end_practice') {
     practice.active = false;
-    fetch('/api/practice/end', {
+    api('/api/practice/end', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ practiceId: practice.id }),
     }).then((r) => r.json()).then((d) => {
@@ -477,10 +482,10 @@ async function handleToolCall(name, args) {
 }
 
 // Prepare an interview session BEFORE startVoice() so inlineSession() picks it up.
-export async function setupInterview({ role = 'Software Engineer', mode = 'normal', interviewId } = {}) {
-  const res = await fetch('/api/interview/start', {
+export async function setupInterview({ role = 'Software Engineer', mode = 'normal', interviewId, projectDescription = null, focusWeaknesses = [] } = {}) {
+  const res = await api('/api/interview/start', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role, mode, interviewId }),
+    body: JSON.stringify({ role, mode, interviewId, projectDescription, focusWeaknesses }),
   });
   if (!res.ok) throw new Error(`interview start failed: ${res.status} ${await res.text()}`);
   const data = await res.json();
@@ -498,7 +503,7 @@ export async function setupInterview({ role = 'Software Engineer', mode = 'norma
 
 export function teardownInterview() {
   if (interview.active && interview.id) {
-    fetch('/api/interview/end', {
+    api('/api/interview/end', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interviewId: interview.id }),
     }).catch(() => {});
@@ -511,7 +516,7 @@ export function teardownInterview() {
 
 // Prepare a practice session BEFORE startVoice() so inlineSession() picks it up.
 export async function setupPractice({ role, questionId, missed, interviewReport, practiceId } = {}) {
-  const res = await fetch('/api/practice/start', {
+  const res = await api('/api/practice/start', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role, questionId, missed, interviewReport, practiceId }),
   });
@@ -531,7 +536,7 @@ export async function setupPractice({ role, questionId, missed, interviewReport,
 
 export function teardownPractice() {
   if (practice.active && practice.id) {
-    fetch('/api/practice/end', {
+    api('/api/practice/end', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ practiceId: practice.id }),
     }).catch(() => {});

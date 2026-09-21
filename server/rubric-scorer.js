@@ -307,9 +307,22 @@ const COMPILED = Object.fromEntries(
   ]),
 );
 
+// Dynamic probes (project-aware interviews) register their checks here at
+// question-generation time. Same check shape, same return contract — the
+// static Q1–Q8 map above is untouched and still serves the legacy bank path.
+const DYNAMIC = new Map(); // id -> compiled checks
+
+export function registerProbeChecks(questionId, checks) {
+  if (!questionId || !Array.isArray(checks)) return;
+  DYNAMIC.set(questionId, checks.map((c) => ({
+    point: c.point, short: c.short, demand: c.demand,
+    regs: (c.all || []).map((src) => new RegExp(src, 'i')),
+  })));
+}
+
 // Score the (cumulative) answer for a question. Unknown question id -> empty.
 export function scoreAnswer(questionId, rawText) {
-  const checks = COMPILED[questionId];
+  const checks = DYNAMIC.get(questionId) || COMPILED[questionId];
   if (!checks) {
     return { questionId: questionId ?? null, results: [], pointsEarned: 0, pointsTotal: 0 };
   }
