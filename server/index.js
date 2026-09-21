@@ -34,10 +34,10 @@ import { saveInterview, saveAnswers, completeInterview, listInterviews, getInter
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
-const DATA_DIR = path.join(ROOT, 'data');
+const DATA_DIR = process.env.VERCEL ? '/tmp/voicetwin-data' : path.join(ROOT, 'data');
 
 // ---- env already loaded by ./env.js (first import above) ----
-if (!process.env.ASSEMBLYAI_API_KEY) {
+if (!process.env.ASSEMBLYAI_API_KEY && !process.env.VERCEL) {
   console.error('[voicetwin] Missing ASSEMBLYAI_API_KEY. Copy .env.example to .env and paste your key.');
   process.exit(1);
 }
@@ -480,7 +480,7 @@ async function handleApi(req, res, url) {
   return sendJSON(res, 404, { error: 'not_found', route });
 }
 
-const server = http.createServer(async (req, res) => {
+export async function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (url.pathname.startsWith('/api/')) {
@@ -529,7 +529,7 @@ const server = http.createServer(async (req, res) => {
   } catch {
     res.writeHead(500); res.end('read error');
   }
-});
+}
 
 // Day 7 (Test I): sweep ghost sessions (browser refresh never calls /end).
 setInterval(() => {
@@ -537,18 +537,20 @@ setInterval(() => {
   if (swept > 0) console.log(`[voicetwin] swept ${swept} idle session(s)`);
 }, 5 * 60_000).unref();
 
-server.listen(CONFIG.PORT, () => {
-  console.log(`[voicetwin] Day 1 server on http://localhost:${CONFIG.PORT}`);
-  console.log(`[voicetwin] WS: ${CONFIG.AAI.WS_URL} | voice: ${CONFIG.AAI.VOICE} | ${CONFIG.AAI.SAMPLE_RATE} Hz PCM16`);
-  console.log(`[voicetwin] Caps: max session ${CONFIG.LIMITS.MAX_SESSION_SECONDS}s | client cap ${CONFIG.LIMITS.CLIENT_MAX_SECONDS}s | token TTL ${CONFIG.LIMITS.TOKEN_EXPIRES_SECONDS}s`);
-});
+if (!process.env.VERCEL) {
+  const server = http.createServer(handleRequest);
+  server.listen(CONFIG.PORT, () => {
+    console.log(`[voicetwin] Day 1 server on http://localhost:${CONFIG.PORT}`);
+    console.log(`[voicetwin] WS: ${CONFIG.AAI.WS_URL} | voice: ${CONFIG.AAI.VOICE} | ${CONFIG.AAI.SAMPLE_RATE} Hz PCM16`);
+    console.log(`[voicetwin] Caps: max session ${CONFIG.LIMITS.MAX_SESSION_SECONDS}s | client cap ${CONFIG.LIMITS.CLIENT_MAX_SECONDS}s | token TTL ${CONFIG.LIMITS.TOKEN_EXPIRES_SECONDS}s`);
+  });
 
-// Graceful shutdown: stop accepting, close keep-alives. Client is responsible
-// for session.end; server holds no voice sockets (browser talks directly to AAI).
-function shutdown() {
-  console.log('\n[voicetwin] shutting down…');
-  server.close(() => process.exit(0));
-  setTimeout(() => process.exit(0), 2000).unref();
+  // Graceful shutdown for the local Node server.
+  function shutdown() {
+    console.log('\n[voicetwin] shutting down…');
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 2000).unref();
+  }
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
