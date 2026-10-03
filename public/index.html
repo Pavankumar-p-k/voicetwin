@@ -6,6 +6,7 @@
   <title>VoiceTwin — Describe your project, get interviewed</title>
   <meta name="description" content="Describe the project you built and get interviewed about it, live, by voice." />
   <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='36' r='24' fill='%235294FF' stroke='black' stroke-width='4'/%3E%3Cellipse cx='24' cy='32' rx='6' ry='8' fill='white' stroke='black' stroke-width='3'/%3E%3Cellipse cx='40' cy='32' rx='6' ry='8' fill='white' stroke='black' stroke-width='3'/%3E%3Ccircle cx='25' cy='34' r='2.5' fill='black'/%3E%3Ccircle cx='39' cy='34' r='2.5' fill='black'/%3E%3Crect x='28' y='44' width='8' height='8' fill='black'/%3E%3Crect x='29' y='4' width='6' height='10' rx='3' fill='%23FACC00' stroke='black' stroke-width='2'/%3E%3C/svg%3E" />
 </head>
 <body>
   <div class="marquee"><div>★ LIVE VOICE INTERVIEW ★ NO LOGIN ★ PROJECT-FIRST ★ HARD TECHNICAL QUESTIONS ★ LIVE VOICE INTERVIEW ★ NO LOGIN ★ PROJECT-FIRST ★ HARD TECHNICAL QUESTIONS&nbsp;</div></div>
@@ -19,6 +20,57 @@
       </div>
 
       <div id="appView">
+        <div class="mascot-wrap" aria-hidden="true">
+          <svg class="mascot" viewBox="0 0 220 240" role="img">
+            <defs>
+              <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="2.2" fill="#000" opacity="0.85"/>
+              </pattern>
+            </defs>
+            <!-- antenna mic -->
+            <line x1="110" y1="38" x2="110" y2="14" stroke="#000" stroke-width="5" stroke-linecap="round"/>
+            <rect x="98" y="2" width="24" height="18" rx="9" fill="#FACC00" stroke="#000" stroke-width="3"/>
+            <line x1="104" y1="6" x2="104" y2="16" stroke="#000" stroke-width="2"/>
+            <line x1="110" y1="6" x2="110" y2="16" stroke="#000" stroke-width="2"/>
+            <line x1="116" y1="6" x2="116" y2="16" stroke="#000" stroke-width="2"/>
+            <!-- arms -->
+            <line x1="34" y1="150" x2="14" y2="132" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+            <line x1="186" y1="150" x2="206" y2="132" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+            <circle cx="14" cy="132" r="7" fill="#FACC00" stroke="#000" stroke-width="3"/>
+            <circle cx="206" cy="132" r="7" fill="#FACC00" stroke="#000" stroke-width="3"/>
+            <!-- body -->
+            <ellipse cx="110" cy="140" rx="78" ry="86" fill="#5294FF" stroke="#000" stroke-width="5"/>
+            <!-- dot shading (dots-type texture) -->
+            <ellipse cx="110" cy="182" rx="58" ry="40" fill="url(#dots)" opacity="0.35"/>
+            <circle cx="66" cy="100" r="3" fill="#000"/>
+            <circle cx="154" cy="100" r="3" fill="#000"/>
+            <circle cx="52" cy="140" r="2.4" fill="#000"/>
+            <circle cx="168" cy="140" r="2.4" fill="#000"/>
+            <circle cx="60" cy="168" r="2" fill="#000"/>
+            <circle cx="160" cy="168" r="2" fill="#000"/>
+            <!-- eyes -->
+            <g class="eye">
+              <ellipse cx="82" cy="118" rx="20" ry="24" fill="#fff" stroke="#000" stroke-width="4"/>
+              <circle class="pupil" cx="86" cy="122" r="8" fill="#000"/>
+              <circle cx="89" cy="119" r="2.5" fill="#fff"/>
+            </g>
+            <g class="eye">
+              <ellipse cx="138" cy="118" rx="20" ry="24" fill="#fff" stroke="#000" stroke-width="4"/>
+              <circle class="pupil" cx="134" cy="122" r="8" fill="#000"/>
+              <circle cx="137" cy="119" r="2.5" fill="#fff"/>
+            </g>
+            <!-- speaker mouth: live EQ -->
+            <g class="eq">
+              <rect x="88" y="158" width="10" height="26" rx="3" fill="#000"/>
+              <rect x="105" y="150" width="10" height="42" rx="3" fill="#000"/>
+              <rect x="122" y="158" width="10" height="26" rx="3" fill="#000"/>
+            </g>
+            <!-- feet -->
+            <ellipse cx="78" cy="224" rx="20" ry="10" fill="#000"/>
+            <ellipse cx="142" cy="224" rx="20" ry="10" fill="#000"/>
+          </svg>
+          <div class="mascot-shadow"></div>
+        </div>
         <h1>SHIP IT.<br /><span class="hl">DEFEND IT.</span></h1>
         <p class="sub">Describe a project you built. A senior-level voice interviewer grills you on architecture, tradeoffs &amp; war stories.</p>
         <div class="neo-card">
