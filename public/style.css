@@ -140,8 +140,10 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .neo-badge.b3 { background: var(--main); transform: rotate(-1deg); }
 /* ---- VoiceTwin mascot: dots-type creature (start page side panel) ---- */
 .screen1-card.wide { max-width: 1020px; }
-.start-hero { display: flex; gap: 28px; align-items: center; }
-.mascot-side { flex: 0 0 300px; display: flex; flex-direction: column; align-items: center; }
+.start-hero { display: flex; gap: 24px; align-items: flex-start; }
+.mascot-side { flex: 0 0 300px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.mascot-side .mascot { width: 220px; }
+.mascot-side .mascot-tags { margin-top: 10px; }
 .start-main { flex: 1; min-width: 0; }
 .start-main h1 { text-align: left; }
 .start-main .sub { text-align: left; }
