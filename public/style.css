@@ -138,19 +138,58 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 .neo-badge.b1 { background: var(--chart-3); transform: rotate(-2deg); }
 .neo-badge.b2 { background: var(--chart-4); transform: rotate(1.5deg); }
 .neo-badge.b3 { background: var(--main); transform: rotate(-1deg); }
-/* ---- VoiceTwin mascot: dots-type creature (start page only) ---- */
+/* ---- VoiceTwin mascot: dots-type creature (start page side panel) ---- */
+.screen1-card.wide { max-width: 1020px; }
+.start-hero { display: flex; gap: 28px; align-items: center; }
+.mascot-side { flex: 0 0 300px; display: flex; flex-direction: column; align-items: center; }
+.start-main { flex: 1; min-width: 0; }
+.start-main h1 { text-align: left; }
+.start-main .sub { text-align: left; }
+.mascot-say {
+  font-family: var(--font-head); font-weight: 900; font-size: 14px; letter-spacing: 1px;
+  background: #fff; border: 3px solid #000; border-radius: 12px; box-shadow: var(--shadow);
+  padding: 8px 14px; margin-bottom: 10px; position: relative; transform: rotate(-2deg);
+}
+.mascot-say::after {
+  content: ''; position: absolute; left: 50%; bottom: -11px; width: 14px; height: 14px;
+  background: #fff; border-right: 3px solid #000; border-bottom: 3px solid #000;
+  transform: translateX(-50%) rotate(45deg);
+}
 .mascot-wrap { display: flex; flex-direction: column; align-items: center; margin: 6px 0 10px; }
-.mascot { width: 190px; height: auto; overflow: visible; animation: bob 2.6s ease-in-out infinite; }
-.mascot-shadow { width: 110px; height: 14px; background: #000; border-radius: 50%; opacity: 0.85; margin-top: 2px; animation: shdw 2.6s ease-in-out infinite; }
+.mascot { width: 260px; height: auto; overflow: visible; animation: bob 2.6s ease-in-out infinite; }
+.mascot-shadow { width: 130px; height: 14px; background: #000; border-radius: 50%; opacity: 0.85; margin-top: 2px; animation: shdw 2.6s ease-in-out infinite; }
+.mascot-tags { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
 @keyframes bob { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-12px) rotate(1.5deg); } }
 @keyframes shdw { 0%,100% { transform: scaleX(1); opacity: 0.85; } 50% { transform: scaleX(0.78); opacity: 0.5; } }
 .mascot .eye { transform-box: fill-box; transform-origin: center; animation: blink 4.2s infinite; }
 @keyframes blink { 0%,93%,100% { transform: scaleY(1); } 95%,97% { transform: scaleY(0.08); } }
 .mascot .eq rect { animation: eqb 0.9s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom; }
-.mascot .eq rect:nth-child(2) { animation-delay: 0.25s; }
-.mascot .eq rect:nth-child(3) { animation-delay: 0.5s; }
+.mascot .eq rect:nth-child(2) { animation-delay: 0.2s; }
+.mascot .eq rect:nth-child(3) { animation-delay: 0.4s; }
+.mascot .eq rect:nth-child(4) { animation-delay: 0.6s; }
+.mascot .eq rect:nth-child(5) { animation-delay: 0.8s; }
 @keyframes eqb { 0%,100% { transform: scaleY(0.5); } 50% { transform: scaleY(1.15); } }
-@media (prefers-reduced-motion: reduce) { .mascot, .mascot-shadow, .mascot .eye, .mascot .eq rect { animation: none; } }
+.mascot .aura { transform-box: fill-box; transform-origin: center; animation: spin 24s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.mascot .twk { transform-box: fill-box; transform-origin: center; animation: twk 1.8s ease-in-out infinite; }
+.mascot .twk.t2 { animation-delay: 0.9s; }
+@keyframes twk { 0%,100% { transform: scale(0.7) rotate(0deg); opacity: 0.6; } 50% { transform: scale(1.2) rotate(20deg); opacity: 1; } }
+.mascot .wave-arm { transform-box: fill-box; transform-origin: 200px 160px; animation: wave 1.6s ease-in-out infinite; }
+@keyframes wave { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-18deg); } }
+.mascot .flo1 { animation: floaty 3s ease-in-out infinite; }
+.mascot .flo2 { animation: floaty 3.6s ease-in-out 0.5s infinite; }
+.mascot .flo3 { animation: floaty 3.2s ease-in-out 1s infinite; }
+@keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+.mascot .sig { animation: sigp 1.6s ease-in-out infinite; }
+.mascot .sig.s2 { animation-delay: 0.8s; }
+@keyframes sigp { 0%,100% { opacity: 0.25; } 50% { opacity: 1; } }
+@media (max-width: 900px) {
+  .start-hero { flex-direction: column; }
+  .mascot-side { flex: none; }
+  .mascot { width: 170px; }
+  .start-main h1, .start-main .sub { text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) { .mascot, .mascot-shadow, .mascot .eye, .mascot .eq rect, .mascot .aura, .mascot .twk, .mascot .wave-arm, .mascot .flo1, .mascot .flo2, .mascot .flo3, .mascot .sig { animation: none; } }
 
 .screen1-card h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 900; letter-spacing: -1px;
   margin: 0 0 10px; text-align: center; text-transform: uppercase; }
@@ -230,9 +269,10 @@ body.screen-chat .log .line {
 body.screen-chat .log .line .t { display: none; }
 body.screen-chat .log .line.agent { background: #fff; color: #000; }
 body.screen-chat .log .line.agent::before {
-  display: inline-block; font-family: var(--font-head); font-size: 12px; font-weight: 900; letter-spacing: 1.5px;
-  background: var(--chart-3); color: #000; border: 2px solid #000;
-  content: '★ VOICETWIN'; margin-bottom: 10px; padding: 3px 12px; box-shadow: 2px 2px 0 0 #000;
+  content: ''; display: block; width: 40px; height: 40px; border-radius: 50%;
+  background: #5294FF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='36' r='24' fill='%235294FF'/%3E%3Cellipse cx='24' cy='32' rx='7' ry='9' fill='white' stroke='black' stroke-width='3'/%3E%3Cellipse cx='40' cy='32' rx='7' ry='9' fill='white' stroke='black' stroke-width='3'/%3E%3Ccircle cx='25' cy='34' r='3' fill='black'/%3E%3Ccircle cx='39' cy='34' r='3' fill='black'/%3E%3Crect x='24' y='44' width='16' height='6' rx='3' fill='black'/%3E%3Crect x='29' y='4' width='6' height='10' rx='3' fill='%23FACC00' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center/cover no-repeat;
+  border: 2px solid #000; box-shadow: 2px 2px 0 0 #000;
+  margin-bottom: 10px; padding: 0;
 }
 body.screen-chat .log .line:not(.agent):not(.sys):not(.dim):not(.ok):not(.warn):not(.err) { background: #000; color: #fff; box-shadow: 5px 5px 0 0 var(--main); }
 body.screen-chat .log .line:not(.agent):not(.sys):not(.dim):not(.ok):not(.warn):not(.err)::before {

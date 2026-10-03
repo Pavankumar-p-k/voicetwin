@@ -11,7 +11,7 @@
 <body>
   <div class="marquee"><div>★ LIVE VOICE INTERVIEW ★ NO LOGIN ★ PROJECT-FIRST ★ HARD TECHNICAL QUESTIONS ★ LIVE VOICE INTERVIEW ★ NO LOGIN ★ PROJECT-FIRST ★ HARD TECHNICAL QUESTIONS&nbsp;</div></div>
   <main class="screen-center">
-    <div class="screen1-card">
+    <div class="screen1-card wide">
       <div class="brand-center">VOICE<span>TWIN</span></div>
       <div class="neo-badge-row">
         <span class="neo-badge b1">★ voice-first</span>
@@ -20,82 +20,117 @@
       </div>
 
       <div id="appView">
-        <div class="mascot-wrap" aria-hidden="true">
-          <svg class="mascot" viewBox="0 0 220 240" role="img">
-            <defs>
-              <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
-                <circle cx="3" cy="3" r="2.2" fill="#000" opacity="0.85"/>
-              </pattern>
-            </defs>
-            <!-- antenna mic -->
-            <line x1="110" y1="38" x2="110" y2="14" stroke="#000" stroke-width="5" stroke-linecap="round"/>
-            <rect x="98" y="2" width="24" height="18" rx="9" fill="#FACC00" stroke="#000" stroke-width="3"/>
-            <line x1="104" y1="6" x2="104" y2="16" stroke="#000" stroke-width="2"/>
-            <line x1="110" y1="6" x2="110" y2="16" stroke="#000" stroke-width="2"/>
-            <line x1="116" y1="6" x2="116" y2="16" stroke="#000" stroke-width="2"/>
-            <!-- arms -->
-            <line x1="34" y1="150" x2="14" y2="132" stroke="#000" stroke-width="9" stroke-linecap="round"/>
-            <line x1="186" y1="150" x2="206" y2="132" stroke="#000" stroke-width="9" stroke-linecap="round"/>
-            <circle cx="14" cy="132" r="7" fill="#FACC00" stroke="#000" stroke-width="3"/>
-            <circle cx="206" cy="132" r="7" fill="#FACC00" stroke="#000" stroke-width="3"/>
-            <!-- body -->
-            <ellipse cx="110" cy="140" rx="78" ry="86" fill="#5294FF" stroke="#000" stroke-width="5"/>
-            <!-- dot shading (dots-type texture) -->
-            <ellipse cx="110" cy="182" rx="58" ry="40" fill="url(#dots)" opacity="0.35"/>
-            <circle cx="66" cy="100" r="3" fill="#000"/>
-            <circle cx="154" cy="100" r="3" fill="#000"/>
-            <circle cx="52" cy="140" r="2.4" fill="#000"/>
-            <circle cx="168" cy="140" r="2.4" fill="#000"/>
-            <circle cx="60" cy="168" r="2" fill="#000"/>
-            <circle cx="160" cy="168" r="2" fill="#000"/>
-            <!-- eyes -->
-            <g class="eye">
-              <ellipse cx="82" cy="118" rx="20" ry="24" fill="#fff" stroke="#000" stroke-width="4"/>
-              <circle class="pupil" cx="86" cy="122" r="8" fill="#000"/>
-              <circle cx="89" cy="119" r="2.5" fill="#fff"/>
-            </g>
-            <g class="eye">
-              <ellipse cx="138" cy="118" rx="20" ry="24" fill="#fff" stroke="#000" stroke-width="4"/>
-              <circle class="pupil" cx="134" cy="122" r="8" fill="#000"/>
-              <circle cx="137" cy="119" r="2.5" fill="#fff"/>
-            </g>
-            <!-- speaker mouth: live EQ -->
-            <g class="eq">
-              <rect x="88" y="158" width="10" height="26" rx="3" fill="#000"/>
-              <rect x="105" y="150" width="10" height="42" rx="3" fill="#000"/>
-              <rect x="122" y="158" width="10" height="26" rx="3" fill="#000"/>
-            </g>
-            <!-- feet -->
-            <ellipse cx="78" cy="224" rx="20" ry="10" fill="#000"/>
-            <ellipse cx="142" cy="224" rx="20" ry="10" fill="#000"/>
-          </svg>
-          <div class="mascot-shadow"></div>
-        </div>
-        <h1>SHIP IT.<br /><span class="hl">DEFEND IT.</span></h1>
-        <p class="sub">Describe a project you built. A senior-level voice interviewer grills you on architecture, tradeoffs &amp; war stories.</p>
-        <div class="neo-card">
-          <label class="proj-label" for="projectInput">✎ Tell me about your project — 20 to 4000 chars</label>
-          <textarea id="projectInput" class="proj-input" maxlength="4000" placeholder="Tell me about your project... what you built, your stack, your role, one hard decision you made."></textarea>
-          <div class="screen1-err" id="projectErr">Write a few sentences about your project first — the interviewer needs something real to ask about.</div>
-          <p class="screen1-note" id="charCount">0 / 4000</p>
-          <label class="proj-label" style="margin-top:20px">⚙ Choose difficulty</label>
-          <div class="diff-cards" id="diffCards">
-            <button type="button" class="diff-card" data-mode="simple">
-              <b>Simple</b><span>5 Qs · warmup</span><i>Build confidence with straightforward questions.</i>
-            </button>
-            <button type="button" class="diff-card selected" data-mode="medium">
-              <b>Medium</b><span>5 Qs · real loop</span><i>Expect technical follow-ups and tradeoffs.</i>
-            </button>
-            <button type="button" class="diff-card" data-mode="hard">
-              <b>Hard</b><span>5 Qs · bar-raiser</span><i>Deep technical questions and tougher follow-ups.</i>
-            </button>
+        <div class="start-hero">
+          <div class="mascot-side" aria-hidden="true">
+            <div class="mascot-say">WHAT DID YOU BUILD?</div>
+            <svg class="mascot" viewBox="0 0 260 280" role="img">
+              <defs>
+                <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
+                  <circle cx="3" cy="3" r="2.2" fill="#000" opacity="0.85"/>
+                </pattern>
+              </defs>
+              <!-- aura ring -->
+              <circle class="aura" cx="130" cy="150" r="112" fill="none" stroke="#000" stroke-width="3" stroke-dasharray="14 10"/>
+              <!-- floating dots -->
+              <circle class="flo1" cx="28" cy="70" r="6" fill="#FACC00" stroke="#000" stroke-width="3"/>
+              <circle class="flo2" cx="232" cy="90" r="5" fill="#FF4D50" stroke="#000" stroke-width="3"/>
+              <circle class="flo3" cx="222" cy="230" r="6" fill="#05E17A" stroke="#000" stroke-width="3"/>
+              <!-- sparkles -->
+              <path class="twk" d="M48 170 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4 z" fill="#fff" stroke="#000" stroke-width="2"/>
+              <path class="twk t2" d="M212 160 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#FACC00" stroke="#000" stroke-width="2"/>
+              <!-- antenna mic + signal -->
+              <line x1="130" y1="52" x2="130" y2="26" stroke="#000" stroke-width="5" stroke-linecap="round"/>
+              <rect x="117" y="12" width="26" height="20" rx="10" fill="#FACC00" stroke="#000" stroke-width="3"/>
+              <line x1="124" y1="16" x2="124" y2="28" stroke="#000" stroke-width="2"/>
+              <line x1="130" y1="16" x2="130" y2="28" stroke="#000" stroke-width="2"/>
+              <line x1="136" y1="16" x2="136" y2="28" stroke="#000" stroke-width="2"/>
+              <path class="sig" d="M104 20 a20 20 0 0 1 0 12" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+              <path class="sig s2" d="M156 20 a20 20 0 0 0 0 12" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+              <!-- waving arm (right) -->
+              <g class="wave-arm">
+                <line x1="200" y1="160" x2="228" y2="128" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+                <circle cx="230" cy="124" r="9" fill="#FACC00" stroke="#000" stroke-width="3"/>
+                <line x1="230" y1="112" x2="230" y2="102" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+                <line x1="222" y1="114" x2="216" y2="106" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+                <line x1="238" y1="114" x2="244" y2="106" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+              </g>
+              <!-- body -->
+              <ellipse cx="130" cy="158" rx="82" ry="90" fill="#5294FF" stroke="#000" stroke-width="5"/>
+              <!-- dot shading -->
+              <ellipse cx="130" cy="204" rx="60" ry="40" fill="url(#dots)" opacity="0.35"/>
+              <circle cx="84" cy="112" r="3" fill="#000"/>
+              <circle cx="176" cy="112" r="3" fill="#000"/>
+              <circle cx="70" cy="152" r="2.4" fill="#000"/>
+              <circle cx="190" cy="152" r="2.4" fill="#000"/>
+              <!-- blush dots -->
+              <g fill="#FF9DE2" stroke="#000" stroke-width="1.5">
+                <circle cx="62" cy="142" r="4"/><circle cx="72" cy="146" r="3"/><circle cx="62" cy="152" r="3"/>
+                <circle cx="198" cy="142" r="4"/><circle cx="188" cy="146" r="3"/><circle cx="198" cy="152" r="3"/>
+              </g>
+              <!-- eyes -->
+              <g class="eye">
+                <ellipse cx="102" cy="130" rx="21" ry="25" fill="#fff" stroke="#000" stroke-width="4"/>
+                <circle class="pupil" cx="106" cy="134" r="8.5" fill="#000"/>
+                <circle cx="109" cy="131" r="2.5" fill="#fff"/>
+              </g>
+              <g class="eye">
+                <ellipse cx="158" cy="130" rx="21" ry="25" fill="#fff" stroke="#000" stroke-width="4"/>
+                <circle class="pupil" cx="154" cy="134" r="8.5" fill="#000"/>
+                <circle cx="157" cy="131" r="2.5" fill="#fff"/>
+              </g>
+              <!-- speaker grille mouth -->
+              <rect x="92" y="166" width="76" height="40" rx="12" fill="#000"/>
+              <g class="eq" fill="#FACC00">
+                <rect x="100" y="176" width="8" height="20" rx="3"/>
+                <rect x="112" y="172" width="8" height="28" rx="3"/>
+                <rect x="124" y="176" width="8" height="20" rx="3"/>
+                <rect x="136" y="172" width="8" height="28" rx="3"/>
+                <rect x="148" y="176" width="8" height="20" rx="3"/>
+              </g>
+              <!-- mic arm (left) holding tiny mic -->
+              <line x1="52" y1="168" x2="30" y2="188" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+              <circle cx="28" cy="192" r="9" fill="#fff" stroke="#000" stroke-width="3"/>
+              <rect x="20" y="172" width="16" height="14" rx="7" fill="#FF4D50" stroke="#000" stroke-width="3"/>
+              <!-- feet + motion lines -->
+              <line x1="60" y1="248" x2="40" y2="248" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+              <line x1="200" y1="248" x2="220" y2="248" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+              <ellipse cx="98" cy="246" rx="20" ry="10" fill="#000"/>
+              <ellipse cx="162" cy="246" rx="20" ry="10" fill="#000"/>
+            </svg>
+            <div class="mascot-shadow"></div>
+            <div class="mascot-tags">
+              <span class="neo-badge b2">● always listening</span>
+              <span class="neo-badge b1">★ fights back</span>
+            </div>
           </div>
-          <div class="screen1-actions">
-            <button id="startInterviewBtn" class="primary">Start interview →</button>
-            <button id="saveDraftBtn" class="small">Save draft</button>
+          <div class="start-main">
+            <h1>SHIP IT.<br /><span class="hl">DEFEND IT.</span></h1>
+            <p class="sub">Describe a project you built. A senior-level voice interviewer grills you on architecture, tradeoffs &amp; war stories.</p>
+            <div class="neo-card">
+              <label class="proj-label" for="projectInput">✎ Tell me about your project — 20 to 4000 chars</label>
+              <textarea id="projectInput" class="proj-input" maxlength="4000" placeholder="Tell me about your project... what you built, your stack, your role, one hard decision you made."></textarea>
+              <div class="screen1-err" id="projectErr">Write a few sentences about your project first — the interviewer needs something real to ask about.</div>
+              <p class="screen1-note" id="charCount">0 / 4000</p>
+              <label class="proj-label" style="margin-top:20px">⚙ Choose difficulty</label>
+              <div class="diff-cards" id="diffCards">
+                <button type="button" class="diff-card" data-mode="simple">
+                  <b>Simple</b><span>5 Qs · warmup</span><i>Build confidence with straightforward questions.</i>
+                </button>
+                <button type="button" class="diff-card selected" data-mode="medium">
+                  <b>Medium</b><span>5 Qs · real loop</span><i>Expect technical follow-ups and tradeoffs.</i>
+                </button>
+                <button type="button" class="diff-card" data-mode="hard">
+                  <b>Hard</b><span>5 Qs · bar-raiser</span><i>Deep technical questions and tougher follow-ups.</i>
+                </button>
+              </div>
+              <div class="screen1-actions">
+                <button id="startInterviewBtn" class="primary">Start interview →</button>
+                <button id="saveDraftBtn" class="small">Save draft</button>
+              </div>
+              <p class="screen1-note" id="draftStatus" style="display:none"></p>
+              <p class="screen1-note">Chrome or Edge · headphones recommended · the interviewer speaks first</p>
+            </div>
           </div>
-          <p class="screen1-note" id="draftStatus" style="display:none"></p>
-          <p class="screen1-note">Chrome or Edge · headphones recommended · the interviewer speaks first</p>
         </div>
       </div>
     </div>
