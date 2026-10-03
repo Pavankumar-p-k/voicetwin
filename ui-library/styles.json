@@ -1,0 +1,63 @@
+{
+  "library": "ui-library",
+  "version": "0.1.0",
+  "base": "base.css",
+  "themes": [
+    {
+      "id": "cybercore",
+      "name": "Cybercore",
+      "file": "themes/cybercore.css",
+      "tags": ["dark", "neon", "terminal", "sci-fi", "glow"],
+      "best_for": "Dev tools, dashboards, gaming HUDs, terminal-style apps",
+      "avoid_for": "Long-form reading, government/health content, low-vision audiences without tweaks",
+      "fonts": {
+        "display": "Unbounded",
+        "body": "Space Mono",
+        "mono": "Space Mono",
+        "source_urls": [
+          "https://fonts.google.com/specimen/Unbounded",
+          "https://fonts.google.com/specimen/Space+Mono"
+        ]
+      },
+      "motion": "smooth glow transitions + flicker on primary hover",
+      "source_urls": []
+    },
+    {
+      "id": "claymorphism",
+      "name": "Claymorphism",
+      "file": "themes/claymorphism.css",
+      "tags": ["light", "pastel", "soft", "playful", "3d"],
+      "best_for": "Mobile apps, kids/education products, friendly onboarding, wellness apps",
+      "avoid_for": "Dense data tables, professional/finance contexts, high-glare outdoor use",
+      "fonts": {
+        "display": "Archivo",
+        "body": "Space Grotesk",
+        "mono": "system mono",
+        "source_urls": [
+          "https://fonts.google.com/specimen/Archivo",
+          "https://fonts.google.com/specimen/Space+Grotesk"
+        ]
+      },
+      "motion": "bouncy spring press/hover",
+      "source_urls": []
+    },
+    {
+      "id": "bento",
+      "name": "Bento",
+      "file": "themes/bento.css",
+      "tags": ["light", "minimal", "grid", "modular", "product"],
+      "best_for": "Marketing pages, SaaS dashboards, portfolios, app home screens",
+      "avoid_for": "Brand-heavy expressive sites, horror/dark-first experiences",
+      "fonts": {
+        "display": "Inter",
+        "body": "Inter",
+        "mono": "system mono",
+        "source_urls": [
+          "https://fonts.google.com/specimen/Inter"
+        ]
+      },
+      "motion": "smooth subtle lift only",
+      "source_urls": []
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ui-library — theme demo</title>
+  <link rel="stylesheet" href="base.css" />
+  <link id="theme-link" rel="stylesheet" href="themes/cybercore.css" />
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="#">ui-library</a>
+    <a href="#" aria-current="page">Demo</a>
+    <a href="#">Docs</a>
+    <label class="caption" for="theme">Theme
+      <select class="select" id="theme" style="width:auto;display:inline-block">
+        <option value="cybercore">Cybercore</option>
+        <option value="claymorphism">Claymorphism</option>
+        <option value="bento">Bento</option>
+      </select>
+    </label>
+  </nav>
+
+  <header class="hero container">
+    <div class="display">One markup.<br />Every theme.</div>
+    <p class="lead">Same classes, three skins. Switch the dropdown — layout and components stay identical, only the theme file changes.</p>
+    <p class="row" style="justify-content:center">
+      <a class="btn primary" href="#components">Primary action</a>
+      <a class="btn secondary" href="#components">Secondary</a>
+      <a class="btn ghost" href="#components">Ghost</a>
+      <a class="btn icon primary" href="#components" aria-label="Star">★</a>
+    </p>
+  </header>
+
+  <main class="container stack" id="components" style="gap:var(--pad-lg)">
+    <div class="grid cols-3">
+      <div class="stat-card"><div class="k">Contrast AA</div><div class="v">100%</div><div class="d">body text ≥ 4.5:1</div></div>
+      <div class="stat-card"><div class="k">Themes</div><div class="v">3</div><div class="d">more coming</div></div>
+      <div class="stat-card"><div class="k">JS needed</div><div class="v">0</div><div class="d">pure CSS skins</div></div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <ul>
+          <li><a href="#">Overview</a></li>
+          <li><a href="#">Buttons</a></li>
+          <li><a href="#">Forms</a></li>
+          <li><a href="#">Data</a></li>
+        </ul>
+      </aside>
+      <div class="stack">
+        <div class="card">
+          <h3>Card + badges + chips</h3>
+          <p class="muted">Badges carry status color. Chips are neutral filters.</p>
+          <p class="row"><span class="badge">new</span><span class="badge ok">pass</span><span class="badge warn">beta</span><span class="badge err">fail</span></p>
+          <p class="row"><span class="chip">css</span><span class="chip">no-js</span><span class="chip">a11y</span></p>
+        </div>
+        <div class="card">
+          <h3>Avatars + progress</h3>
+          <p class="row"><span class="avatar sm">PK</span><span class="avatar">VT</span><span class="avatar lg">UI</span></p>
+          <div class="progress" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"><i style="--val:70%"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Form</h3>
+        <label class="field"><span>Name</span><input class="input" placeholder="Ada Lovelace" /></label>
+        <label class="field"><span>Plan</span><select class="select"><option>Starter</option><option>Pro</option></select></label>
+        <label class="field"><span>Disabled</span><input class="input" value="locked" disabled /></label>
+        <label class="toggle"><input type="checkbox" checked /><span class="track"></span> Email alerts</label>
+        <p class="row" style="margin-top:var(--pad-sm)"><button class="btn primary" type="button">Save</button><button class="btn secondary" type="button" disabled>Disabled</button></p>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <h3>Tabs (no JS)</h3>
+          <div class="tabs">
+            <input type="radio" name="dt" id="t1" checked /><label for="t1">First</label>
+            <input type="radio" name="dt" id="t2" /><label for="t2">Second</label>
+            <input type="radio" name="dt" id="t3" /><label for="t3">Third</label>
+          </div>
+          <div class="tabpanels"><div class="panel" id="p1">First panel content.</div><div class="panel" id="p2">Second panel content.</div><div class="panel" id="p3">Third panel content.</div></div>
+        </div>
+        <div class="accordion">
+          <details open><summary>Accordion one</summary><div>Detail text lives here.</div></details>
+          <details><summary>Accordion two</summary><div>More detail text lives here.</div></details>
+        </div>
+        <p>Hover the <span data-tip="Pure CSS tooltip" tabindex="0">tooltip</span> and try the <label for="m1" class="btn secondary" style="cursor:pointer">modal</label>.</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Theme</th><th>Mode</th><th>Radius</th><th>Motion</th></tr></thead>
+        <tbody>
+          <tr><td>Cybercore</td><td>dark</td><td>sharp</td><td>glow + flicker</td></tr>
+          <tr><td>Claymorphism</td><td>light</td><td>round</td><td>bouncy</td></tr>
+          <tr><td>Bento</td><td>light</td><td>tile</td><td>subtle</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-block">link base.css + themes/&lt;id&gt;.css
+.no-build .no-js .same-classes</div>
+  </main>
+
+  <input class="modal-toggle" type="checkbox" id="m1" />
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="box">
+      <h3>Modal (no JS)</h3>
+      <p class="muted">Checkbox-driven overlay. Label toggles it.</p>
+      <p><label for="m1" class="btn primary" style="cursor:pointer">Close</label></p>
+    </div>
+  </div>
+
+  <footer class="footer container">ui-library v0.1.0 — base.css + one theme file. <span id="cur">cybercore</span></footer>
+
+  <script>
+    const link = document.getElementById('theme-link');
+    const sel = document.getElementById('theme');
+    const cur = document.getElementById('cur');
+    sel.addEventListener('change', () => {
+      link.href = 'themes/' + sel.value + '.css';
+      cur.textContent = sel.value;
+    });
+  </script>
+</body>
+</html>

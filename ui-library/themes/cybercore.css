@@ -1,0 +1,41 @@
+/* cybercore — neon terminal grid. Unbounded display + Space Mono body. */
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Space+Mono:wght@400;700&display=swap');
+:root {
+  --bg: #05070f; --surface: #0b1126; --surface-2: #131c38;
+  --text: #d9fbff; --muted: #93a7cf;
+  --primary: #00f0ff; --on-primary: #00181b;
+  --secondary: #ff00e5; --on-secondary: #1c0019;
+  --border: #1f5f7a; --border-w: 1px;
+  --success: #35e08e; --on-success: #00180d; --warning: #ffd23f; --on-warning: #1c1400;
+  --error: #ff5d7a; --on-error: #1c0008;
+  --radius: 6px; --radius-sm: 4px; --radius-pill: 4px; --avatar-radius: 4px;
+  --shadow: 0 0 0 rgba(0,0,0,0); --shadow-hover: 0 0 18px rgba(0,240,255,.45);
+  --font-body: 'Space Mono', monospace; --font-head: 'Unbounded', sans-serif; --font-mono: 'Space Mono', monospace;
+  --fs-display: clamp(2rem, 6vw, 3.5rem); --fs-h1: 1.6rem; --fs-h2: 1.25rem; --fs-h3: 1.05rem;
+  --fs-body: 15px; --fs-caption: 12px; --head-tracking: 0.02em;
+  --pad-sm: 8px; --pad-md: 18px; --pad-lg: 36px; --gap: 18px; --maxw: 1120px; --sidew: 230px;
+  --transition: all .18s ease;
+  --hover-lift: translateY(-2px); --active-press: translateY(1px);
+  --focus-ring: 2px solid var(--secondary);
+  --code-bg: #03040a; --code-fg: #00f0ff; --overlay: rgba(3,4,10,.8); --progress-h: 10px;
+}
+body { background-image: linear-gradient(rgba(0,240,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,.07) 1px, transparent 1px); background-size: 34px 34px; }
+.nav { border-bottom: 1px solid var(--primary); box-shadow: 0 0 14px rgba(0,240,255,.25); }
+.nav .brand { color: var(--primary); text-transform: uppercase; letter-spacing: .12em; }
+.card, .stat-card, .sidebar, .accordion, .modal .box { border-color: var(--primary); box-shadow: 0 0 12px rgba(0,240,255,.18), inset 0 0 24px rgba(0,240,255,.04); }
+.btn { text-transform: uppercase; letter-spacing: .08em; font-size: 13px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+.btn.primary { box-shadow: 0 0 14px rgba(0,240,255,.5); }
+.btn.primary:hover { animation: cyb-flicker .3s steps(2) 2; }
+@keyframes cyb-flicker { 50% { opacity: .6; } }
+.btn.secondary { border-color: var(--secondary); color: var(--secondary); }
+.chip { border-color: var(--secondary); color: var(--secondary); }
+.badge { box-shadow: 0 0 10px rgba(0,240,255,.5); }
+.stat-card .v { color: var(--primary); text-shadow: 0 0 16px rgba(0,240,255,.6); }
+.hero .display { text-transform: uppercase; text-shadow: 0 0 24px rgba(0,240,255,.55), 3px 3px 0 var(--secondary); }
+.table th { color: var(--primary); }
+.progress { border-color: var(--primary); }
+.progress > i { background: linear-gradient(90deg, var(--primary), var(--secondary)); box-shadow: 0 0 12px rgba(0,240,255,.6); }
+.toggle input:checked + .track { box-shadow: 0 0 12px rgba(0,240,255,.6); }
+.accordion summary::before { color: var(--secondary); }
+.avatar { box-shadow: 0 0 10px rgba(0,240,255,.5); }
+.input:focus, .select:focus { box-shadow: 0 0 12px rgba(0,240,255,.35); }

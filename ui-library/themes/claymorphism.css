@@ -1,0 +1,42 @@
+/* claymorphism — soft pastel clay. Archivo display + Space Grotesk body. */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap');
+:root {
+  --bg: #e0e5ec; --surface: #e0e5ec; --surface-2: #edf0f5;
+  --text: #3b4160; --muted: #5d6484;
+  --primary: #7ba4ff; --on-primary: #0a1633;
+  --secondary: #ff9db1; --on-secondary: #3b1420;
+  --border: #e0e5ec; --border-w: 0px;
+  --success: #2fa36b; --on-success: #fff; --warning: #9a6a00; --on-warning: #fff;
+  --error: #d33f4e; --on-error: #fff;
+  --radius: 26px; --radius-sm: 18px; --radius-pill: 999px; --avatar-radius: 50%;
+  --shadow: 8px 8px 16px #a3b1c6, -8px -8px 16px #ffffff;
+  --shadow-hover: 10px 10px 22px #a3b1c6, -10px -10px 22px #ffffff;
+  --shadow-active: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+  --font-body: 'Space Grotesk', sans-serif; --font-head: 'Archivo', sans-serif; --font-mono: ui-monospace, Menlo, monospace;
+  --fs-display: clamp(2.2rem, 6vw, 3.8rem); --fs-h1: 1.7rem; --fs-h2: 1.3rem; --fs-h3: 1.1rem;
+  --fs-body: 15px; --fs-caption: 12.5px;
+  --pad-sm: 10px; --pad-md: 22px; --pad-lg: 44px; --gap: 22px; --maxw: 1080px; --sidew: 240px;
+  --transition: all .25s cubic-bezier(.34, 1.8, .5, 1);
+  --hover-lift: translateY(-3px) scale(1.01); --active-press: scale(.97);
+  --hover-filter: brightness(1.04);
+  --focus-ring: 3px solid #7ba4ff;
+  --field-shadow: inset 4px 4px 8px #a3b1c6, inset -4px -4px 8px #ffffff;
+  --code-bg: #d3d9e3; --code-fg: #3b4160; --overlay: rgba(59,65,96,.45); --progress-h: 16px;
+}
+.nav, .sidebar, .card, .stat-card, .accordion, .modal .box, .table-wrap { border: none; }
+.btn { border: none; box-shadow: 6px 6px 12px #a3b1c6, -6px -6px 12px #ffffff; }
+.btn.primary { background: linear-gradient(145deg, #8db1ff, #6a93f5); }
+.btn:active { box-shadow: var(--shadow-active); }
+.btn.secondary { background: #e0e5ec; }
+.chip, .badge { border: none; box-shadow: 4px 4px 8px #a3b1c6, -4px -4px 8px #ffffff; }
+.badge { background: linear-gradient(145deg, #8db1ff, #6a93f5); }
+.input, .select, textarea.input { border: none; }
+.progress { border: none; box-shadow: inset 4px 4px 8px #a3b1c6, inset -4px -4px 8px #ffffff; }
+.progress > i { background: linear-gradient(90deg, #8db1ff, #ff9db1); }
+.toggle .track { border: none; box-shadow: inset 3px 3px 6px #a3b1c6, inset -3px -3px 6px #ffffff; }
+.toggle .track::after { background: #8b93ad; box-shadow: 2px 2px 4px #a3b1c6; }
+.toggle input:checked + .track { background: linear-gradient(145deg, #8db1ff, #6a93f5); }
+.avatar { border: none; box-shadow: 5px 5px 10px #a3b1c6, -5px -5px 10px #ffffff; }
+.hero .display { font-weight: 800; }
+.table th { background: transparent; }
+.tabs input:checked + label { background: #e0e5ec; border: none; box-shadow: inset 4px 4px 8px #a3b1c6, inset -4px -4px 8px #ffffff; }
