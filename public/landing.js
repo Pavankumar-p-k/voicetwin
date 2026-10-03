@@ -123,3 +123,12 @@ input?.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') start();
 });
 input?.addEventListener('input', () => { if (err) err.style.display = 'none'; });
+
+// Dev unlock: Ctrl+Shift+D enables console/harness for this tab.
+window.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+    e.preventDefault();
+    try { sessionStorage.setItem('vt:dev', '1'); } catch {}
+    showDraftStatus('Dev mode on — console + harness unlocked in this tab');
+  }
+});

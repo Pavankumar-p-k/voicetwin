@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { CONFIG } from '../config.js';
 import { mintToken } from './token.js';
 import { latencyStore } from './latency-store.js';
-import { getInterview, createInterview, endInterview, sessionCount, sweepSessions, extractProjectContext, activeCountFor } from './interview-engine.js';
+import { getInterview, createInterview, endInterview, sessionCount, sweepSessions, extractProjectContext, activeCountFor, endOldestFor } from './interview-engine.js';
 import { getPractice, createPractice, endPractice, practiceCount, sweepPracticeSessions } from './practice-engine.js';
 import { buildSystemPrompt, buildTools, buildPracticePrompt, buildPracticeTools } from './instructions.js';
 import { buildProjectBrief, renderBriefForPrompt } from './project-analyzer.js';
@@ -176,8 +176,11 @@ async function handleApi(req, res, url) {
         return sendJSON(res, 400, { error: 'invalid_project', message: `Project description must be 20–4000 characters (got ${projectDescription.trim().length}). Describe ONE project: what you built, your stack, your role, one hard decision.` });
       }
       const mode = VALID_MODES.has(body.mode) ? body.mode : 'medium';
-      if (activeCountFor('local') >= 2) {
-        return sendJSON(res, 429, { error: 'too_many_active', message: 'Finish your current interview before starting another.' });
+      // Start-spam never wedges: retire the stalest session instead of 429ing.
+      while (activeCountFor('local') >= 2) {
+        const dropped = endOldestFor('local');
+        logUsage({ event: 'interview_auto_ended', interviewId: dropped });
+        if (!dropped) break;
       }
       // One browser tab = one live session id from the token flow; we key on a
       // client-generated interview id so refreshes don't strand old sessions.

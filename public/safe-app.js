@@ -88,10 +88,9 @@ els.replayBtn.addEventListener('click', replay);
 els.stopBtn.addEventListener('click', () => { stopRequested = true; });
 els.backBtn.addEventListener('click', () => { window.location.href = '/'; });
 
-// Esc here goes BACK to live (reverse of other pages) unless replaying;
-// hold Shift+Esc to force-navigate to safe mode again (no-op) — kept simple:
+// Ctrl+Esc here goes BACK to live (reverse of other pages) unless replaying.
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !playing) {
+  if (e.ctrlKey && (e.key === 'Escape' || e.key === 'Esc') && !playing) {
     window.location.href = '/';
   }
 });

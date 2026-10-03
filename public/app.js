@@ -2,7 +2,7 @@
 import { CONFIG } from '/config.js';
 import { startVoice, endVoice, EVT, logLine, audio, turn, harnessState } from '/voice-client.js';
 import { TESTS, rotateTest } from '/harness.js';
-import '/safe.js'; // installs Esc hotkey listener (side-effect module)
+import '/safe.js'; // installs Ctrl+Esc hotkey listener (side-effect module)
 
 const $ = (id) => document.getElementById(id);
 const els = {

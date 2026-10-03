@@ -123,8 +123,8 @@ els.startBtn.addEventListener('click', start);
 els.endBtn.addEventListener('click', end);
 window.addEventListener('pagehide', () => { endVoice(); teardownPractice(); });
 window.addEventListener('keydown', (e) => {
-  // Demo-recovery hotkey, consistent across every page (Day 1 contract).
-  if (e.key === 'Escape' && !e.repeat) window.location.href = '/safe.html';
+  // Demo-recovery hotkey, consistent across every page: Ctrl+Esc.
+  if (e.ctrlKey && (e.key === 'Escape' || e.key === 'Esc') && !e.repeat) window.location.href = '/safe.html';
 });
 renderState();
 

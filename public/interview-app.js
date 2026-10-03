@@ -27,6 +27,7 @@ const els = {
   resScore: $('resScore'), resSub: $('resSub'),
   dimSpec: $('dimSpec'), dimEvidence: $('dimEvidence'),
   wellList: $('wellList'), fixList: $('fixList'), focusList: $('focusList'),
+  chartBox: $('chartBox'), qaLog: $('qaLog'), qaInput: $('qaInput'), qaAsk: $('qaAsk'),
   // Back navigation (additive; lifecycle untouched).
   backBtn: $('backBtn'), leaveConfirm: $('leaveConfirm'),
   stayBtn: $('stayBtn'), leaveBtn: $('leaveBtn'),
@@ -216,7 +217,77 @@ function renderReport(rep) {
       ? focus.map((f, i) => `<li>${i + 1}. ${f}</li>`).join('')
       : '<li>Keep answering with specifics and measurements.</li>';
   }
+  renderChart(rep); // graphs: how the interview went, per-question marks
+  resetQA(); // fresh Q&A box bound to this report
   document.body.classList.add('results-mode');
+}
+
+// Graphs: per-question evidence bars + specificity trend. Pure CSS, measured values only.
+function renderChart(rep) {
+  if (!els.chartBox) return;
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pq = rep.perQuestion || [];
+  const rows = pq.map((q, i) => {
+    const pct = q.pointsTotal > 0 ? Math.round((q.pointsEarned / q.pointsTotal) * 100) : 0;
+    const cls = pct >= 80 ? 'hi' : pct >= 40 ? 'mid' : 'lo';
+    return `<div class="crow" title="${esc(q.question || q.id)}">` +
+      `<span class="cid">Q${i + 1}</span>` +
+      `<div class="cbar"><i class="${cls}" style="width:${pct}%"></i></div>` +
+      `<span class="cnum">${q.pointsEarned}/${q.pointsTotal}</span></div>`;
+  }).join('');
+  const trend = specHist.length
+    ? `<div class="ctrend">${specHist.map((s) => `<i style="height:${Math.max(6, s * 4)}px" title="${s}/10"></i>`).join('')}</div>` +
+      `<div class="cnote">Specificity per answer (left → right), /10</div>`
+    : '';
+  els.chartBox.innerHTML = rows + trend;
+}
+
+// Q&A about the finished report — answered locally from measured data, zero cost.
+function resetQA() {
+  if (els.qaLog) els.qaLog.innerHTML = '';
+}
+function answerReport(q) {
+  const rep = lastReport;
+  if (!rep) return 'No report yet — finish an interview first.';
+  const t = q.toLowerCase();
+  const pq = rep.perQuestion || [];
+  const cap = (s) => String(s).charAt(0).toUpperCase() + String(s).slice(1);
+  const mQ = t.match(/q\s?(\d+)/);
+  if (mQ) {
+    const i = Number(mQ[1]) - 1;
+    const item = pq[i];
+    if (!item) return `There are only ${pq.length} questions — ask about Q1–Q${pq.length}.`;
+    const missed = (item.missed || []).map((m) => String(m).toLowerCase());
+    return `Q${i + 1} “${item.question}” — marks ${item.pointsEarned}/${item.pointsTotal}.` +
+      (missed.length ? ` You lost marks on: ${missed.join('; ')}. Next time, say each of those out loud with a concrete example.` : ' Full marks — nothing missed.');
+  }
+  if (/(weakest|worst|bad)/.test(t) && rep.weakest) {
+    const w = rep.weakest;
+    return `Weakest: ${w.id} at ${w.pointsEarned}/${w.pointsTotal} — missed: ${(w.missed || []).map((m) => String(m).toLowerCase()).join('; ') || 'see per-question marks above'}. Hit “Practice again” to drill exactly this.`;
+  }
+  if (/(improve|better|suggest|fix|how)/.test(t)) {
+    const fb = rep.feedback || {};
+    const tips = [...(fb.technical || []), ...(fb.communication || []), ...((fb.focus) || [])].slice(0, 3);
+    return tips.length
+      ? `Top fixes: ${tips.map((x, i) => `${i + 1}. ${cap(x)}`).join(' ')}`
+      : 'Keep answering with specifics and measurements — nothing major flagged.';
+  }
+  if (/(score|mark|grade|result)/.test(t)) {
+    return `Overall ${(rep.evidenceScore / 10).toFixed(1)} / 10 — ${rep.totalEarned}/${rep.totalPossible} evidence points across ${rep.questionsAsked} answers. Evidence means: each answer contained the exact points the question's rubric demanded.`;
+  }
+  if (/specif/.test(t)) {
+    const avg = specHist.length ? (specHist.reduce((s, n) => s + n, 0) / specHist.length).toFixed(1) : null;
+    return avg ? `Average specificity ${avg}/10 across ${specHist.length} answers. 8+ means concrete, personal, measured. Below 5 means vague — add what YOU did plus one number.` : 'No specificity data recorded this run.';
+  }
+  return `You scored ${(rep.evidenceScore / 10).toFixed(1)} / 10 (${rep.totalEarned}/${rep.totalPossible} evidence). Ask me “why did I lose marks on Q2?”, “what is my weakest question?”, or “how do I improve?”.`;
+}
+function askQA() {
+  const q = (els.qaInput?.value || '').trim();
+  if (!q || !els.qaLog) return;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  els.qaLog.innerHTML += `<div class="qa-q">You: ${esc(q)}</div><div class="qa-a">${esc(answerReport(q))}</div>`;
+  els.qaLog.scrollTop = els.qaLog.scrollHeight;
+  els.qaInput.value = '';
 }
 
 // Track agent speaking state from EVT (audio scheduling is inside voice-client).
@@ -326,8 +397,11 @@ EVT.on((e) => {
 });
 
 async function start() {
+  if (starting) return; // double-click guard: one in-flight start at a time
+  starting = true;
   try {
     els.startBtn.disabled = true;
+    els.startBtn.textContent = 'Starting…';
     nudgeCount = 0;
     // No hard block: overlong stored projects (e.g. a pasted README) are
     // auto-trimmed to the 4000-char server limit so Start just works.
@@ -362,6 +436,10 @@ async function start() {
     logLine(`start failed: ${err.message}`, 'err');
     teardownInterview();
     renderState();
+  } finally {
+    starting = false;
+    els.startBtn.textContent = 'Start interview →';
+    renderState();
   }
 }
 
@@ -378,6 +456,7 @@ function end() {
 // Uses the existing end() (mic stop + session teardown). Listeners are all
 // module-level, so Leave/restart can never duplicate pipelines or renderers.
 let interviewDone = false;
+let starting = false; // one in-flight startInterview at a time (anti-spam)
 
 function sessionActive() { return Boolean(audio.ws); }
 function showLeave() { if (els.leaveConfirm) els.leaveConfirm.hidden = false; }
@@ -416,6 +495,8 @@ window.addEventListener('popstate', () => {
 
 els.startBtn.addEventListener('click', start);
 els.endBtn.addEventListener('click', end);
+els.qaAsk?.addEventListener('click', askQA);
+els.qaInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') askQA(); });
 // Practice Again restarts the SAME interview flow (no separate page),
 // informed by the previous report's weaknesses when available.
 let lastReport = null;
@@ -430,6 +511,9 @@ els.practiceBtn.addEventListener('click', async () => {
   hideLeave();
   els.log.innerHTML = '';
   specHist.length = 0;
+  if (els.chartBox) els.chartBox.innerHTML = '';
+  if (els.qaLog) els.qaLog.innerHTML = '';
+  if (els.qaInput) els.qaInput.value = '';
   if (els.liveScore) els.liveScore.hidden = true;
   if (els.lsSpec) els.lsSpec.textContent = '—';
   if (els.lsEvidence) els.lsEvidence.textContent = '—';

@@ -727,6 +727,22 @@ export function activeCountFor(userId) {
   return n;
 }
 
+// Start-spam guard: end the stalest owned session so a double-clicked Start
+// (or a crashed tab that never called /end) can never wedge the user into a
+// permanent `too_many_active` 429. Returns the ended id, or null.
+export function endOldestFor(userId) {
+  let oldestId = null;
+  let oldestTouched = Infinity;
+  for (const [id, iv] of sessions) {
+    if (iv && iv.ownerId === userId && (iv.lastTouched || 0) < oldestTouched) {
+      oldestTouched = iv.lastTouched || 0;
+      oldestId = id;
+    }
+  }
+  if (oldestId) sessions.delete(oldestId);
+  return oldestId;
+}
+
 // Day 7 (Test I): a browser refresh never calls /end, so the in-memory
 // interview would linger forever. Idle sessions older than 30 min are swept.
 export function sweepSessions(maxIdleMs = 30 * 60_000) {
