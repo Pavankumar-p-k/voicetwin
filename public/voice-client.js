@@ -5,7 +5,11 @@
 // harness page can measure T0..T3 without touching this file.
 
 import { CONFIG } from '/config.js'; // shared root config, served by the server
-import { api } from './auth.js'; // adds Authorization when logged in (server derives user_id)
+
+// No-auth fetch wrapper: interview is open, no login. Plain fetch.
+export async function api(path, opts = {}) {
+  return fetch(path, opts);
+}
 
 // ---- shared instrumentation bus (Page 3 reads this) ----
 export const EVT = {

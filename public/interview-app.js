@@ -1,10 +1,10 @@
 // interview-app.js — VoiceTwin Day 2 (Page 2) — the interview screen wiring.
 import { startVoice, endVoice, EVT, audio, interview, setupInterview, teardownInterview, setTurnDetection, TD_BASELINE, TD_LOOSE } from '/voice-client.js';
-import { getToken } from './auth.js';
 import '/safe.js';
 
-// Login gate: the interview is authenticated-only. No token → login screen.
-if (!getToken()) {
+// No login gate: Screen 1 (project description) hands off via sessionStorage.
+// No project text → back to Screen 1 to describe it first.
+if (!sessionStorage.getItem('vt:project')) {
   window.location.href = '/';
 }
 
@@ -329,6 +329,24 @@ async function start() {
   try {
     els.startBtn.disabled = true;
     nudgeCount = 0;
+    // No hard block: overlong stored projects (e.g. a pasted README) are
+    // auto-trimmed to the 4000-char server limit so Start just works.
+    // Too-short ones still need a real description from Screen 1.
+    let proj = (sessionProject() || '').trim();
+    if (proj.length > 4000) {
+      logLine(`project trimmed ${proj.length} → 4000 chars (limit)`, 'sys');
+      proj = proj.slice(0, 4000);
+      try { sessionStorage.setItem('vt:project', proj); } catch {}
+    }
+    if (proj.length < 20) {
+      logLine(
+        `project description is ${proj.length} chars (needs 20–4000). Go back to / and describe ONE project — what you built, your stack, your role, one hard decision.`,
+        'err',
+      );
+      renderState();
+      els.startBtn.disabled = false;
+      return;
+    }
     const data = await setupInterview({
       role: 'Software Engineer',
       mode: sessionMode(),

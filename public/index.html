@@ -3,67 +3,47 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VoiceTwin — Log in or create account</title>
-  <meta name="description" content="Log in to VoiceTwin. Describe the project you built and get interviewed about it, live, by voice." />
+  <title>VoiceTwin — Describe your project, get interviewed</title>
+  <meta name="description" content="Describe the project you built and get interviewed about it, live, by voice." />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <div class="marquee"><div>★ LIVE VOICE INTERVIEW ★ NO LOGIN ★ PROJECT-FIRST ★ HARD TECHNICAL QUESTIONS ★ LIVE VOICE INTERVIEW ★ NO LOGIN ★ PROJECT-FIRST ★ HARD TECHNICAL QUESTIONS&nbsp;</div></div>
   <main class="screen-center">
     <div class="screen1-card">
       <div class="brand-center">VOICE<span>TWIN</span></div>
-
-      <!-- Logged out: the gate. Nothing else is reachable. -->
-      <div id="authGate" hidden>
-        <h1>Log in or create account</h1>
-        <p class="sub">One account for all your interviews. Your projects and history stay yours.</p>
-        <div class="auth-card">
-          <div class="auth-tabs" id="authTabs">
-            <button type="button" class="auth-tab selected" data-tab="signup">Create account</button>
-            <button type="button" class="auth-tab" data-tab="login">Log in</button>
-          </div>
-          <form id="authForm" class="auth-form" autocomplete="on">
-            <input id="authEmailInput" type="email" placeholder="you@example.com" autocomplete="email" required />
-            <input id="authPassword" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" minlength="6" required />
-            <button class="primary" type="submit" id="authSubmit">Create account →</button>
-          </form>
-          <div class="caption" id="authMsg"></div>
-          <div class="auth-divider"><span>or</span></div>
-          <button id="googleBtn" class="small auth-google">Continue with Google</button>
-        </div>
+      <div class="neo-badge-row">
+        <span class="neo-badge b1">★ voice-first</span>
+        <span class="neo-badge b2">● barge-in ready</span>
+        <span class="neo-badge b3">■ evidence scored</span>
       </div>
 
-      <!-- Logged in: the app. -->
-      <div id="appView" hidden>
-        <div id="signedIn">
-          <span class="caption" id="authEmail"></span>
-          <button id="logoutBtn" class="small">Logout</button>
-        </div>
-        <h1>Practice your technical interview.</h1>
-        <p class="sub">Tell me about a project you built. I'll interview you about it and show you what to improve.</p>
-        <label class="proj-label" for="projectInput">Project</label>
-        <textarea id="projectInput" class="proj-input" placeholder="Tell me about your project... what you built, your stack, your role, one hard decision you made."></textarea>
-        <div class="screen1-err" id="projectErr">Write a few sentences about your project first — the interviewer needs something real to ask about.</div>
-        <label class="proj-label" style="margin-top:24px">Choose your interview</label>
-        <div class="diff-cards" id="diffCards">
-          <button type="button" class="diff-card" data-mode="simple">
-            <b>Simple</b><span>5 questions</span><i>Build confidence with straightforward questions.</i>
-          </button>
-          <button type="button" class="diff-card selected" data-mode="medium">
-            <b>Medium</b><span>5 questions</span><i>Expect technical follow-ups and tradeoffs.</i>
-          </button>
-          <button type="button" class="diff-card" data-mode="hard">
-            <b>Hard</b><span>5 questions</span><i>Deep technical questions and tougher follow-ups.</i>
-          </button>
-        </div>
-        <div class="screen1-actions">
-          <button id="startInterviewBtn" class="primary">Start interview →</button>
-          <button id="saveDraftBtn" class="small">Save draft</button>
-        </div>
-        <p class="screen1-note" id="draftStatus" style="display:none"></p>
-        <p class="screen1-note">Chrome or Edge · headphones recommended · the interviewer speaks first</p>
-        <div class="history-block" id="historyBlock" hidden>
-          <h2 class="history-title">Your interviews</h2>
-          <div id="historyList"></div>
+      <div id="appView">
+        <h1>SHIP IT.<br /><span class="hl">DEFEND IT.</span></h1>
+        <p class="sub">Describe a project you built. A senior-level voice interviewer grills you on architecture, tradeoffs &amp; war stories.</p>
+        <div class="neo-card">
+          <label class="proj-label" for="projectInput">✎ Tell me about your project — 20 to 4000 chars</label>
+          <textarea id="projectInput" class="proj-input" maxlength="4000" placeholder="Tell me about your project... what you built, your stack, your role, one hard decision you made."></textarea>
+          <div class="screen1-err" id="projectErr">Write a few sentences about your project first — the interviewer needs something real to ask about.</div>
+          <p class="screen1-note" id="charCount">0 / 4000</p>
+          <label class="proj-label" style="margin-top:20px">⚙ Choose difficulty</label>
+          <div class="diff-cards" id="diffCards">
+            <button type="button" class="diff-card" data-mode="simple">
+              <b>Simple</b><span>5 Qs · warmup</span><i>Build confidence with straightforward questions.</i>
+            </button>
+            <button type="button" class="diff-card selected" data-mode="medium">
+              <b>Medium</b><span>5 Qs · real loop</span><i>Expect technical follow-ups and tradeoffs.</i>
+            </button>
+            <button type="button" class="diff-card" data-mode="hard">
+              <b>Hard</b><span>5 Qs · bar-raiser</span><i>Deep technical questions and tougher follow-ups.</i>
+            </button>
+          </div>
+          <div class="screen1-actions">
+            <button id="startInterviewBtn" class="primary">Start interview →</button>
+            <button id="saveDraftBtn" class="small">Save draft</button>
+          </div>
+          <p class="screen1-note" id="draftStatus" style="display:none"></p>
+          <p class="screen1-note">Chrome or Edge · headphones recommended · the interviewer speaks first</p>
         </div>
       </div>
     </div>

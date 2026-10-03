@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-if (process.env.NODE_ENV !== 'test' && !process.env.ASSEMBLYAI_API_KEY) {
+if (process.env.NODE_ENV !== 'test') {
   const envPath = path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), '.env');
   if (existsSync(envPath)) {
     for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
