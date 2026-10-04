@@ -217,30 +217,112 @@ function renderReport(rep) {
       ? focus.map((f, i) => `<li>${i + 1}. ${f}</li>`).join('')
       : '<li>Keep answering with specifics and measurements.</li>';
   }
-  renderChart(rep); // graphs: how the interview went, per-question marks
-  resetQA(); // fresh Q&A box bound to this report
   document.body.classList.add('results-mode');
+  renderChart(rep); // graphs need results-mode sizing first
+  resetQA(); // fresh Q&A box bound to this report
 }
 
-// Graphs: per-question evidence bars + specificity trend. Pure CSS, measured values only.
+// Graphs: REAL canvas charts — per-question evidence bars + specificity
+// trend line. Measured values only, HiDPI-sharp, neobrutalist styling.
 function renderChart(rep) {
   if (!els.chartBox) return;
-  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const pq = rep.perQuestion || [];
-  const rows = pq.map((q, i) => {
-    const pct = q.pointsTotal > 0 ? Math.round((q.pointsEarned / q.pointsTotal) * 100) : 0;
-    const cls = pct >= 80 ? 'hi' : pct >= 40 ? 'mid' : 'lo';
-    return `<div class="crow" title="${esc(q.question || q.id)}">` +
-      `<span class="cid">Q${i + 1}</span>` +
-      `<div class="cbar"><i class="${cls}" style="width:${pct}%"></i></div>` +
-      `<span class="cnum">${q.pointsEarned}/${q.pointsTotal}</span></div>`;
-  }).join('');
-  const trend = specHist.length
-    ? `<div class="ctrend">${specHist.map((s) => `<i style="height:${Math.max(6, s * 4)}px" title="${s}/10"></i>`).join('')}</div>` +
-      `<div class="cnote">Specificity per answer (left → right), /10</div>`
-    : '';
-  els.chartBox.innerHTML = rows + trend;
+  els.chartBox.innerHTML =
+    '<div class="ccap">Evidence per question (marks)</div>' +
+    '<canvas id="chartBars"></canvas>' +
+    '<div class="ccap">Specificity per answer, /10 (left → right)</div>' +
+    '<canvas id="chartTrend"></canvas>';
+  drawCharts();
 }
+
+function chartColor(pct) {
+  return pct >= 80 ? '#05E17A' : pct >= 40 ? '#FACC00' : '#FF4D50';
+}
+
+function fitCanvas(cv, hCss) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(200, cv.parentElement.clientWidth - 32);
+  cv.style.width = w + 'px';
+  cv.style.height = hCss + 'px';
+  cv.width = Math.round(w * dpr);
+  cv.height = Math.round(hCss * dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, hCss);
+  return [ctx, w];
+}
+
+function drawCharts() {
+  const rep = lastReport;
+  if (!rep || !document.body.classList.contains('results-mode')) return;
+  const bars = document.getElementById('chartBars');
+  const trend = document.getElementById('chartTrend');
+  if (!bars || !trend) return;
+  const pq = rep.perQuestion || [];
+
+  // --- bars: one row per question ---
+  const rowH = 34;
+  const [b, bw] = fitCanvas(bars, pq.length * rowH + 8);
+  b.font = '700 12px "Space Grotesk", sans-serif';
+  b.textBaseline = 'middle';
+  pq.forEach((q, i) => {
+    const y = 4 + i * rowH;
+    const pct = q.pointsTotal > 0 ? q.pointsEarned / q.pointsTotal : 0;
+    b.fillStyle = '#000';
+    b.fillText(`Q${i + 1}`, 2, y + 12);
+    const x0 = 34;
+    const tw = bw - x0 - 44;
+    b.fillStyle = '#fff';
+    b.fillRect(x0, y, tw, 24);
+    b.fillStyle = chartColor(pct * 100);
+    b.fillRect(x0 + 2, y + 2, Math.max(0, (tw - 4) * pct), 20);
+    b.lineWidth = 2;
+    b.strokeStyle = '#000';
+    b.strokeRect(x0, y, tw, 24);
+    b.fillStyle = '#000';
+    b.fillText(`${q.pointsEarned}/${q.pointsTotal}`, bw - 40, y + 12);
+  });
+
+  // --- trend: specificity polyline 0..10 ---
+  const [t, tw2] = fitCanvas(trend, 120);
+  const padL = 26, padB = 16, padT = 8;
+  const H = 120 - padB - padT;
+  t.strokeStyle = '#000';
+  t.lineWidth = 1;
+  t.font = '700 10px "Space Grotesk", sans-serif';
+  t.fillStyle = '#000';
+  for (let g = 0; g <= 10; g += 5) {
+    const y = padT + H - (g / 10) * H;
+    t.globalAlpha = 0.25;
+    t.beginPath(); t.moveTo(padL, y); t.lineTo(tw2 - 6, y); t.stroke();
+    t.globalAlpha = 1;
+    t.fillText(String(g), 6, y + 3);
+  }
+  if (specHist.length) {
+    const xs = (i) => specHist.length === 1 ? padL + (tw2 - padL - 10) / 2
+      : padL + (i / (specHist.length - 1)) * (tw2 - padL - 10);
+    const ys = (s) => padT + H - (Math.max(0, Math.min(10, s)) / 10) * H;
+    t.lineWidth = 3;
+    t.strokeStyle = '#5294FF';
+    t.beginPath();
+    specHist.forEach((s, i) => { const x = xs(i), y = ys(s); i ? t.lineTo(x, y) : t.moveTo(x, y); });
+    t.stroke();
+    specHist.forEach((s, i) => {
+      const x = xs(i), y = ys(s);
+      t.fillStyle = '#FACC00';
+      t.beginPath(); t.arc(x, y, 6, 0, 7); t.fill();
+      t.lineWidth = 2; t.strokeStyle = '#000'; t.stroke();
+    });
+  } else {
+    t.font = '500 13px "Space Grotesk", sans-serif';
+    t.fillText('No specificity data recorded.', padL, padT + 20);
+  }
+}
+
+let chartResizeT = null;
+window.addEventListener('resize', () => {
+  clearTimeout(chartResizeT);
+  chartResizeT = setTimeout(drawCharts, 200);
+});
 
 // Q&A about the finished report — answered locally from measured data, zero cost.
 function resetQA() {
@@ -278,6 +360,13 @@ function answerReport(q) {
   if (/specif/.test(t)) {
     const avg = specHist.length ? (specHist.reduce((s, n) => s + n, 0) / specHist.length).toFixed(1) : null;
     return avg ? `Average specificity ${avg}/10 across ${specHist.length} answers. 8+ means concrete, personal, measured. Below 5 means vague — add what YOU did plus one number.` : 'No specificity data recorded this run.';
+  }
+  if (/(chart|graph|trend|visual|picture)/.test(t)) {
+    const best = pq.reduce((a, b) => (b.pointsEarned / Math.max(1, b.pointsTotal) >= a.pointsEarned / Math.max(1, a.pointsTotal) ? b : a), pq[0] || { id: '—', pointsEarned: 0, pointsTotal: 1 });
+    const dir = specHist.length > 1
+      ? (specHist[specHist.length - 1] >= specHist[0] ? 'trending up — your answers got sharper as you went' : 'dipping at the end — you likely tired or went vague on later questions')
+      : 'not enough answers to call a trend';
+    return `Top chart: green bars (80%+) are strong, yellow 40–80%, red below 40%. Best question: ${best.id || best.question} at ${best.pointsEarned}/${best.pointsTotal}. Bottom chart: your specificity is ${dir}.`;
   }
   return `You scored ${(rep.evidenceScore / 10).toFixed(1)} / 10 (${rep.totalEarned}/${rep.totalPossible} evidence). Ask me “why did I lose marks on Q2?”, “what is my weakest question?”, or “how do I improve?”.`;
 }

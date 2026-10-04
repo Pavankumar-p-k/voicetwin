@@ -286,18 +286,10 @@ body.results-mode .results-screen { display: block; animation: rise 0.3s ease; }
 .results-actions { display: flex; gap: 10px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
 
 /* ---- post-interview graphs + report Q&A ---- */
-.chart { background: #fff; border: 3px solid #000; box-shadow: var(--shadow); padding: 16px; margin: 0 0 24px; display: flex; flex-direction: column; gap: 10px; }
-.crow { display: flex; align-items: center; gap: 10px; }
-.cid { font-family: var(--font-head); font-weight: 800; font-size: 13px; width: 28px; }
-.cbar { flex: 1; height: 22px; border: 2px solid #000; background: #fff; }
-.cbar i { display: block; height: 100%; }
-.cbar i.hi { background: var(--chart-4); }
-.cbar i.mid { background: var(--chart-3); }
-.cbar i.lo { background: var(--chart-2); }
-.cnum { font-family: var(--mono); font-size: 12px; font-weight: 700; min-width: 36px; text-align: right; }
-.ctrend { display: flex; align-items: flex-end; gap: 5px; margin-top: 8px; min-height: 44px; }
-.ctrend i { flex: 1; background: var(--main); border: 2px solid #000; min-width: 10px; }
-.cnote { font-size: 12px; font-weight: 700; }
+.chart { background: #fff; border: 3px solid #000; box-shadow: var(--shadow); padding: 16px; margin: 0 0 24px; display: flex; flex-direction: column; gap: 6px; }
+.chart canvas { display: block; }
+.ccap { font-family: var(--font-head); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+.ccap:first-child { margin-top: 0; }
 .qa-box { background: #fff; border: 3px solid #000; box-shadow: var(--shadow); padding: 16px; margin: 0 0 24px; }
 .qa-log { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; margin-bottom: 12px; }
 .qa-log:empty::before { content: 'Marks, weakest question, how to improve — ask anything about this report.'; font-size: 13px; opacity: 0.65; }

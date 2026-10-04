@@ -11,7 +11,9 @@
 //   point  — exact rubric wording (defensible in front of a judge)
 //   short  — 1–3 word chip label for the UI
 //   demand — the exact sentence the agent speaks when this evidence is missing
-//   all    — EVERY regex must match against the lowercased answer text
+//   all    — EVERY regex must match against the normalized answer text
+
+import { normalizeText, isNegated } from './text-norm.js';
 
 const RUBRIC_CHECKS = {
   Q1: [ // Tell me about a difficult technical project.
@@ -28,15 +30,15 @@ const RUBRIC_CHECKS = {
       point: 'States what made it technically difficult',
       short: 'difficulty',
       demand: 'What actually made that project technically hard?',
-      all: ['hard|difficult|challeng|complex|tricky|tough|struggl|the (main|biggest|hardest) (problem|challenge|part)|not trivial'],
+      all: ['hard|difficult|challeng|complex|tricky|tough|struggl|pain(ful| point)|the (main|biggest|hardest) (problem|challenge|part)|not trivial|kept (breaking|failing)'],
     },
     {
       point: 'Identifies their own specific contribution',
       short: 'my part',
       demand: 'And what part of that did you personally build?',
       all: [
-        '\\b(i|my|me)\\b',
-        '\\b(built|designed|wrote|implemented|created|developed|migrated|architected|led|owned|coded|refactored|optimized|debugged|delivered)\\b',
+        '\\b(i|my|me|myself)\\b|i was the one',
+        '\\b(built|designed|wrote|implemented|created|developed|migrated|architected|led|owned|coded|refactored|optimized|debugged|delivered|shipped|drove)\\b',
       ],
     },
     {
@@ -44,7 +46,7 @@ const RUBRIC_CHECKS = {
       short: 'decision + tradeoff',
       demand: 'Walk me through one technical decision you made — and what you traded away.',
       all: [
-        '(chose|chosen|decided|picked|went with|opted|selected|used)',
+        '(chose|chosen|decided|picked|went with|went for|opted|selected|settled on|landed on|stuck with|ended up (using|with))',
         'because|instead of|rather than|trade.?off|compared to|at the cost|downside|cheaper|simpler|faster than',
       ],
     },
@@ -53,7 +55,7 @@ const RUBRIC_CHECKS = {
       short: 'measurable outcome',
       demand: 'Give me a number — what measurable outcome did that project produce?',
       all: [
-        '\\b\\d+(\\.\\d+)?\\s*(%|percent|ms|seconds?|secs?|minutes?|hours?|days?|users?|customers?|requests?|rps|qps|gb|mb|kb|x\\b)|\\b\\d+[km]\\b|reduced|dropped|cut by|improved by|saved|increased by|grew (to|by)|from \\d+ to \\d+',
+        '\\b\\d+(\\.\\d+)?\\s*(%|percent|ms|seconds?|secs?|minutes?|hours?|days?|users?|customers?|requests?|rps|qps|gb|mb|kb|x\\b)|\\b\\d+[km]\\b|reduced|dropped|cut by|improved by|saved|increased by|grew (to|by)|from \\d+ to \\d+|went from|brought .* down',
       ],
     },
   ],
@@ -63,25 +65,25 @@ const RUBRIC_CHECKS = {
       point: 'Identified the bottleneck',
       short: 'bottleneck',
       demand: 'Where exactly was the bottleneck?',
-      all: ['bottleneck|hot path|slow(est)? (query|endpoint|function|page|part|request)|n\\+1|memory leak|\\bcpu\\b|lock|contention|inefficien|the (main |real )?(problem|culprit) was|turns? out'],
+      all: ['bottleneck|hot path|hotspot|slow(est)? (query|endpoint|function|page|part|request)|slowdown|storms?|meltdown|pile.?up|saturated|n\\+1|memory leak|\\bcpu\\b|lock|contention|inefficien|the (main |real )?(problem|culprit) was|turns? out'],
     },
     {
       point: 'Explained measurement / profiling approach',
       short: 'measurement',
       demand: 'How did you measure the problem before you touched anything?',
-      all: ['profil|benchmark|measur|flame ?graph|trac(e|er|ing)|timing|latency (was|of|numbers|went)|load test|before and after|monitor(ed|ing)? the|p95|p99|dashboard'],
+      all: ['profil|benchmark|measur|instrumented|flame ?graph|trac(e|er|ing)|timing|latency (was|of|numbers|went)|load test|before and after|monitor(ed|ing)? the|p95|p99|dashboard'],
     },
     {
       point: 'Identified root cause',
       short: 'root cause',
       demand: 'What was the root cause, specifically?',
-      all: ['root cause|turns? out|caused by|because (of|the)|due to|the (real )?(issue|cause|problem) was|the bug was'],
+      all: ['root cause|turns? out|caused by|because|due to|the (real )?(issue|cause|problem|culprit) was|the bug was'],
     },
     {
       point: 'Explained the technical solution',
       short: 'solution',
       demand: 'What technical change actually fixed it?',
-      all: ['\\b(added|introduced|cached|caching|indexed|rewrote|refactored|replaced|moved|split|batch(ed|ing)?|pooled|upgraded|optimized|fixed|switched|denormalized)\\b'],
+      all: ['\\b(added|introduced|implemented|built|designed|cached|caching|indexed|rewrote|refactored|replaced|moved|split|batch(ed|ing)?|pooled|upgraded|optimized|fixed|switched|denormalized|shipped)\\b'],
     },
     {
       point: 'Provided a measurable result',
@@ -108,7 +110,7 @@ const RUBRIC_CHECKS = {
       point: 'Explains their own position with reasons',
       short: 'my position',
       demand: 'What was YOUR position, and why?',
-      all: ['\\bi (argued|proposed|suggested|pushed|insisted|preferred|wanted|recommended|felt)\\b|my (position|argument|concern|take|view)'],
+      all: ['\\bi (argued|proposed|suggested|pushed|insisted|preferred|wanted|recommended|felt|took the side|backed)\\b|my (position|argument|concern|take|view)'],
     },
     {
       point: 'Describes how it was resolved (data, owner, experiment)',
@@ -321,18 +323,41 @@ export function registerProbeChecks(questionId, checks) {
 }
 
 // Score the (cumulative) answer for a question. Unknown question id -> empty.
+// Accuracy upgrades over raw regex: the text is normalized first (fillers out,
+// spoken numbers -> digits), and a check only earns when at least one of its
+// matches is NOT inside a negated clause — "we never measured anything" must
+// not earn the measurement point.
 export function scoreAnswer(questionId, rawText) {
   const checks = DYNAMIC.get(questionId) || COMPILED[questionId];
   if (!checks) {
     return { questionId: questionId ?? null, results: [], pointsEarned: 0, pointsTotal: 0 };
   }
-  const text = String(rawText || '').toLowerCase();
-  const results = checks.map((c) => ({
-    point: c.point,
-    short: c.short,
-    demand: c.demand,
-    earned: c.regs.every((re) => re.test(text)),
-  }));
+  const text = normalizeText(rawText);
+  const results = checks.map((c) => {
+    const perRegex = c.regs.map((re) => {
+      re.lastIndex = 0;
+      const hits = [];
+      let m;
+      const g = new RegExp(re.source, 'gi');
+      while ((m = g.exec(text)) !== null) {
+        hits.push(m.index);
+        if (m[0].length === 0) g.lastIndex++;
+      }
+      return hits;
+    });
+    const allMatched = perRegex.every((hits) => hits.length > 0);
+    // At least one regex must have an un-negated hit; every regex's hits
+    // must include an un-negated one (a point claimed then taken back
+    // in the same breath does not count).
+    const earned = allMatched &&
+      perRegex.every((hits) => hits.some((idx) => !isNegated(text, idx)));
+    return {
+      point: c.point,
+      short: c.short,
+      demand: c.demand,
+      earned,
+    };
+  });
   const pointsEarned = results.filter((r) => r.earned).length;
   return { questionId, results, pointsEarned, pointsTotal: results.length };
 }

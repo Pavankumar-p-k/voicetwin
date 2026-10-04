@@ -30,21 +30,35 @@ const TECH_HINTS = [
   'load balancer', 'cdn', 'oauth', 'jwt', 'async', 'thread', 'memory', 'garbage collection',
 ];
 
-const METRIC_RE = /\b\d+(\.\d+)?\s*(%|percent|ms|s\b|sec|seconds|minutes|hours|users|requests|rps|qps|x\b|gb|mb|kb)/i;
 const TIMEFRAME_RE = /\b(monday|tuesday|wednesday|thursday|friday|last week|last month|last year|this year|Q[1-4]\b|\d{4})\b/i;
 const FIRST_PERSON_RE = /\b(i|my|me|mine|i'd|i've|i'm)\b/i;
 const TEAM_RE = /\b(we|our|us)\b/i;
 const PASSIVE_RE = /\b(was|were|been|being)\s+\w+ed\b/i;
 
+import { normalizeText, isNegated } from './text-norm.js';
+
+// A metric counts only when it is CLAIMED, not denied: "we never measured,
+// there were no numbers" must not earn the metric signal. Spoken numbers
+// ("fifty percent") count via normalization.
+function claimedMetric(normText) {
+  const re = /\b\d+(\.\d+)?\s*(%|percent|ms|s\b|sec|seconds|minutes|hours|users|requests|rps|qps|x\b|gb|mb|kb)|\b\d+x\b|\b\d+\b/g;
+  let m;
+  while ((m = re.exec(normText)) !== null) {
+    if (!isNegated(normText, m.index)) return true;
+  }
+  return false;
+}
+
 export function analyzeAnswer(rawText) {
   const text = String(rawText || '').toLowerCase();
+  const norm = normalizeText(rawText);
   const words = text.split(/\s+/).filter(Boolean);
   const wordCount = words.length;
 
   // --- signals ---
   const hedgeHits = HEDGES.filter((h) => text.includes(h));
   const techHits = TECH_HINTS.filter((t) => text.includes(t));
-  const hasMetric = METRIC_RE.test(text) || /\b\d+\b/.test(text);
+  const hasMetric = claimedMetric(norm);
   const hasTimeframe = TIMEFRAME_RE.test(text);
   const firstPerson = FIRST_PERSON_RE.test(text);
   const teamHeavy = TEAM_RE.test(text) && !firstPerson;
