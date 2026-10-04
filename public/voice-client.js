@@ -264,7 +264,8 @@ async function onMessage(msg) {
       turn.awaitingReply = true; // next agent reply is the measured one
       interview.lastUserText = msg.text;
       practice.lastUserText = msg.text;
-      logLine(`You: ${msg.text}`);
+      // No logLine here: each page renders You:/Agent: rows itself
+      // (interview = live bubbles, console/practice/harness = plain rows).
       // Answer received: retune to baseline (tighten again).
       if (interview.waitingForAnswer) {
         interview.waitingForAnswer = false;
@@ -311,7 +312,7 @@ async function onMessage(msg) {
     case 'transcript.agent':
       EVT.push('agent.text', { text: msg.text, interrupted: Boolean(msg.interrupted) });
       turn.agentText = msg.text;
-      logLine(`Agent: ${msg.text}${msg.interrupted ? ' (interrupted)' : ''}`, 'agent');
+      // No logLine here: pages render the agent row (see above).
       break;
 
     case 'reply.done': {

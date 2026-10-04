@@ -73,10 +73,11 @@ fetch('/api/health').then((r) => r.json()).then((h) => {
   els.footNote.textContent = `${h.wsUrl} · gate G<=${h.gate.GREEN_MAX_MS}ms / Y<=${h.gate.YELLOW_MAX_MS}ms`;
 }).catch(() => { els.capNote.textContent = 'server unreachable'; });
 
-// live transcript deltas + test label rotation
+// live transcript deltas + final rows + test label rotation
 EVT.on((e) => {
   if (e.type === 'user.delta') els.liveUser.textContent = e.text || '';
-  if (e.type === 'user.final') els.liveUser.textContent = '';
+  if (e.type === 'user.final') { els.liveUser.textContent = ''; logLine(`You: ${e.text}`); }
+  if (e.type === 'agent.text') logLine(`Agent: ${e.text}${e.interrupted ? ' (interrupted)' : ''}`, 'agent');
   if (e.type === 'session.ready') refreshStatus();
   if (e.type === 'reply.done' && els.autorotate.checked) {
     rotateTest();

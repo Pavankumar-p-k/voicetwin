@@ -233,6 +233,15 @@ body.screen-chat .log .line.err {
   align-self: center; font-size: 13px; font-weight: 700; background: var(--chart-2);
   border: 2px solid #000; border-radius: 8px; padding: 8px 14px; margin: 8px auto;
 }
+/* live conversation states: interim user words + agent speaking placeholder */
+body.screen-chat .log .line.live { border-style: dashed; }
+body.screen-chat .log .line.live::after {
+  content: '…hearing you'; display: block; font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; opacity: 0.7; margin-top: 6px;
+}
+body.screen-chat .log .line .speaking { animation: speak-pulse 1.1s ease-in-out infinite; }
+@keyframes speak-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { body.screen-chat .log .line .speaking { animation: none; } }
 .log .line { padding: 8px 10px; border: 2px solid #000; background: #fff; white-space: pre-wrap;
   word-break: break-word; font-family: var(--mono); font-size: 12.5px; }
 .log .line.ok { background: var(--chart-4); color: #000; }

@@ -382,7 +382,11 @@ function askQA() {
 // Track agent speaking state from EVT (audio scheduling is inside voice-client).
 EVT.on((e) => {
   if (e.type === 'reply.audio') { audio.agentSpeaking = true; renderState(); }
-  if (e.type === 'reply.done') { audio.agentSpeaking = false; renderState(); }
+  if (e.type === 'reply.done') {
+    audio.agentSpeaking = false;
+    dropPendingAgent(e.status === 'interrupted'); // turn over: release the row
+    renderState();
+  }
   if (e.type === 'mic.level') renderLevel(e.level); // Day 6 waveform
   if (e.type === 'interview.pressure') renderPressure(e.level);
   if (e.type === 'interview.analysis') renderAnalysis(e);
@@ -396,6 +400,9 @@ EVT.on((e) => {
   if (e.type === 'session.dropped') {  // Day 7: recover cleanly mid-interview
     disarmNudge();
     teardownInterview();               // free server-side state (no report)
+    dropPendingAgent(false);
+    if (liveUserRow && liveUserRow.isConnected) liveUserRow.classList.remove('live');
+    liveUserRow = null;
     audio.sessionStartAt = null;
     logLine('connection lost — press Start interview to rejoin', 'err');
   }
@@ -446,6 +453,7 @@ EVT.on((e) => {
   if (e.type === 'reply.started') { disarmNudge(); }   // agent speaking — pause the timer
   if (e.type === 'user.final') {
     interview.lastUserText = e.text || '';
+    lockUserBubble(e.text || '');
     disarmNudge();
     renderState();
   }
@@ -467,7 +475,7 @@ EVT.on((e) => {
     logLine(`next question loaded (${e.id})`, 'sys');
     renderState();
   }
-  if (e.type === 'agent.text') { renderState(); }
+  if (e.type === 'agent.text') { fillAgentRow(e.text, e.interrupted); renderState(); }
   if (e.type === 'session.ended' || e.type === 'ws.close') {
     disarmNudge();
     renderState();
@@ -477,11 +485,83 @@ EVT.on((e) => {
   }
 });
 
-// Voice-client already renders You:/Agent: rows into #log (console and
-// harness pages depend on that). This page must NOT render them a second
-// time — one event, one row. Errors still surface here.
+// Live conversation renderer (this page owns its rows — voice-client only
+// pushes events). Two live constructs:
+//   - user bubble: user.delta streams interim words in, user.final locks them.
+//   - agent row: reply.started opens a "speaking…" row instantly so words have
+//     somewhere to land; agent.text fills it; barge-in marks it interrupted.
+// One event, one row — no duplicates.
+let pendingAgent = null; // agent row waiting for its transcript
+let liveUserRow = null;  // interim user bubble
+
+function scrollLog() {
+  els.log.scrollTop = els.log.scrollHeight;
+  while (els.log.childElementCount > 400) els.log.removeChild(els.log.firstChild);
+}
+
+function agentRow() {
+  if (pendingAgent && pendingAgent.isConnected) return pendingAgent;
+  const div = document.createElement('div');
+  div.className = 'line agent';
+  div.innerHTML = '<span class="t"></span><span class="txt"><span class="speaking">● speaking…</span></span>';
+  els.log.appendChild(div);
+  pendingAgent = div;
+  scrollLog();
+  return div;
+}
+
+function fillAgentRow(text, interrupted) {
+  const row = agentRow();
+  const txt = row.querySelector('.txt');
+  if (txt) {
+    // Placeholder (speaking…) → replace; real text already there → append
+    // (some replies stream transcript.agent in chunks).
+    if (txt.querySelector('.speaking')) txt.textContent = text + (interrupted ? ' (interrupted)' : '');
+    else if (text && !txt.textContent.includes(text)) txt.textContent += ' ' + text;
+  }
+  scrollLog();
+}
+
+function dropPendingAgent(interrupted) {
+  if (pendingAgent && pendingAgent.isConnected) {
+    const txt = pendingAgent.querySelector('.txt');
+    if (txt && txt.querySelector('.speaking')) {
+      txt.textContent = interrupted ? '(interrupted before any words)' : '(no transcript)';
+    }
+  }
+  pendingAgent = null;
+}
+
+function liveUserBubble(text) {
+  if (!liveUserRow || !liveUserRow.isConnected) {
+    const div = document.createElement('div');
+    div.className = 'line live';
+    div.innerHTML = '<span class="t"></span><span class="txt"></span>';
+    els.log.appendChild(div);
+    liveUserRow = div;
+  }
+  liveUserRow.querySelector('.txt').textContent = text;
+  scrollLog();
+}
+
+function lockUserBubble(text) {
+  if (liveUserRow && liveUserRow.isConnected) {
+    liveUserRow.classList.remove('live');
+    liveUserRow.querySelector('.txt').textContent = text;
+    liveUserRow = null;
+  } else {
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.innerHTML = '<span class="t"></span><span class="txt"></span>';
+    div.querySelector('.txt').textContent = text;
+    els.log.appendChild(div);
+  }
+  scrollLog();
+}
+
 EVT.on((e) => {
-  if (e.type === 'user.delta') { /* lightweight: skip on this page */ }
+  if (e.type === 'user.delta' && e.text) liveUserBubble(e.text);
+  if (e.type === 'reply.started') agentRow();
   if (e.type === 'session.error') logLine(`error: ${e.code} ${e.message}`, 'err');
 });
 
@@ -536,6 +616,8 @@ function end() {
   disarmNudge();
   endVoice();          // session.end before close (billing-safe)
   teardownInterview(); // free server-side state
+  pendingAgent = null;
+  liveUserRow = null;
   audio.sessionStartAt = null;
   renderState();
   logLine('interview ended by user', 'dim');

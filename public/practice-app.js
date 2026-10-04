@@ -116,7 +116,8 @@ EVT.on((e) => {
     teardownPractice();
     logLine('connection lost — press Start practice to rejoin', 'err');
   }
-  if (e.type === 'transcript.agent') { /* logged by voice-client */ }
+  if (e.type === 'user.final') logLine(`You: ${e.text}`);
+  if (e.type === 'agent.text') logLine(`Agent: ${e.text}${e.interrupted ? ' (interrupted)' : ''}`, 'agent');
 });
 
 els.startBtn.addEventListener('click', start);
