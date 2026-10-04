@@ -1,0 +1,15 @@
+# Render blueprint — one long-lived Node service (recommended host).
+# Render injects PORT itself; the server reads it from the environment.
+services:
+  - type: web
+    name: voicetwin
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ASSEMBLYAI_API_KEY
+        sync: false
+      - key: MAX_SESSION_SECONDS
+        value: 180
+      - key: TOKEN_EXPIRES_SECONDS
+        value: 300

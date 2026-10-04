@@ -125,6 +125,28 @@ node tools/score-accuracy-test.mjs   # 6 checks: strong/vague/negated/spoken-num
 - `session.end` sent before every close (incl. `pagehide`) — the 30-second billable resume window is never paid
 - `/api/usage` shows tokens minted + sessions started
 
+## Deploy
+
+**Render (recommended).** The interview API keeps live session state in memory,
+so it needs one long-lived Node process. Render gives exactly that:
+
+1. New → Web Service → select this repo (or use `render.yaml` blueprint).
+2. Build `npm install`, start `npm start`.
+3. Set `ASSEMBLYAI_API_KEY` in Environment. Done — frontend and `/api/*` share one origin.
+
+**Vercel.** Static files + API functions work, but serverless functions are
+stateless: an interview started on one invocation may hit a fresh one on the
+next call. For reliable multi-turn interviews, prefer Render.
+
+If you still deploy on Vercel and see `404 NOT_FOUND` on `/api/*`, it is the
+platform router, not the app (verified: the function loads and answers
+`/api/health` → 200). Checklist:
+
+1. Project **Root Directory = repo root** (where `package.json` lives — not `public/`).
+2. Output Directory = `public` (already set in `vercel.json` — don't override it).
+3. Environment → `ASSEMBLYAI_API_KEY` set for Production.
+4. Redeploy after changing settings (old builds stay broken).
+
 ## Developer pages
 
 `console.html` and `harness.html` (latency protocol + decision gate) are
